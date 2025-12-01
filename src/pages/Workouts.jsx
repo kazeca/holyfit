@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Timer, Flame, BarChart3, ChevronRight, CheckCircle2 } from 'lucide-react';
+import WorkoutPlayer from '../components/WorkoutPlayer';
 
 const EXERCISES = [
     {
@@ -37,6 +38,16 @@ const EXERCISES = [
 ];
 
 const Workouts = () => {
+    const [selectedWorkout, setSelectedWorkout] = useState(null);
+
+    const handleWorkoutClick = () => {
+        setSelectedWorkout({
+            name: 'Killer Workout',
+            durationSeconds: 300,
+            exercises: EXERCISES
+        });
+    };
+
     return (
         <div className="min-h-screen pb-32 pt-10 px-6 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
             {/* Header */}
@@ -79,7 +90,11 @@ const Workouts = () => {
 
                 <div className="space-y-8">
                     {EXERCISES.map((exercise) => (
-                        <div key={exercise.id} className="flex items-center gap-5 group cursor-pointer">
+                        <div
+                            key={exercise.id}
+                            onClick={handleWorkoutClick}
+                            className="flex items-center gap-5 group cursor-pointer"
+                        >
                             <div className="relative">
                                 <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 shadow-sm">
                                     <img src={exercise.image} alt={exercise.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -105,6 +120,10 @@ const Workouts = () => {
                     ))}
                 </div>
             </div>
+
+            {selectedWorkout && (
+                <WorkoutPlayer workout={selectedWorkout} onClose={() => setSelectedWorkout(null)} />
+            )}
         </div>
     );
 };

@@ -68,7 +68,10 @@ const Leaderboard = () => {
                 <div className="text-center mt-2">
                     <h3 className="font-bold text-gray-900 dark:text-white text-sm truncate w-24 mx-auto">{user.displayName?.split(' ')[0]}</h3>
                     <p className="text-neon-purple font-black text-lg">{user.totalPoints}</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase">Points</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">Points</p>
+                    <span className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        Lvl {Math.floor(user.totalPoints / 1000) + 1}
+                    </span>
                 </div>
             </div>
         );
@@ -115,6 +118,9 @@ const Leaderboard = () => {
                             <p className="text-[10px] text-gray-500 dark:text-gray-400">
                                 {user.currentStreak || 0} dias streak
                             </p>
+                            <span className="inline-block mt-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                Lvl {Math.floor(user.totalPoints / 1000) + 1}
+                            </span>
                         </div>
 
                         <div className="text-right">
