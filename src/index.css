@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neon-purple: #A855F7;
+  --color-neon-fuchsia: #D946EF;
+}
+
+body {
+  @apply bg-black text-white;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Glassmorphism utilities */
+.glass {
+  @apply bg-white/10 backdrop-blur-lg border border-white/20;
+}
