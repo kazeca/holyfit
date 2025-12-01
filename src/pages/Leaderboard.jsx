@@ -132,21 +132,40 @@ const Leaderboard = () => {
                         {topThree[2] && <PodiumItem user={topThree[2]} rank={3} />}
                     </div>
 
-                    {/* List */}
-                    <div className="space-y-4">
+                    <div className="space-y-3">
+                        <h3 className="text-gray-400 text-xs font-bold uppercase tracking-widest mb-4 pl-2">Top Runners</h3>
                         {rest.map((user, index) => (
-                            <div key={user.id} className="bg-white dark:bg-gray-900 p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 dark:border-gray-800">
-                                <div className="w-8 h-8 flex items-center justify-center font-bold text-gray-400 text-sm">
-                                    {index + 4}
+                            <div
+                                key={user.id}
+                                className={`flex items-center gap-4 p-4 rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-white dark:border-white/10 shadow-sm hover:shadow-md transition-all ${auth.currentUser?.uid === user.id ? 'ring-2 ring-purple-500 ring-offset-2 bg-purple-50 dark:bg-purple-900/20' : ''}`}
+                            >
+                                <span className="text-gray-400 font-bold w-6 text-center text-sm">{index + 4}</span>
+
+                                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                    <img
+                                        src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`}
+                                        alt={user.displayName}
+                                        className="w-full h-full object-cover"
+                                    />
                                 </div>
-                                <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`} alt={user.displayName} className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-800" />
-                                <div className="flex-1">
-                                    <h3 className="font-bold text-gray-900 dark:text-white">{user.displayName}</h3>
-                                    <p className="text-xs text-gray-500 font-medium">Nível {user.level || 1}</p>
+
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="font-bold text-gray-900 dark:text-white text-sm truncate">
+                                        {user.displayName || 'Atleta Anônimo'}
+                                    </h3>
+                                    <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                                        {user.currentStreak || 0} dias streak
+                                    </p>
+                                    <span className="inline-block mt-1 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                        Lvl {user.level || 1}
+                                    </span>
                                 </div>
+
                                 <div className="text-right">
-                                    <p className="font-black text-gray-900 dark:text-white">{user.totalPoints || 0}</p>
-                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">XP</p>
+                                    <span className="block text-sm font-black text-gray-900 dark:text-white">
+                                        {user.totalPoints}
+                                    </span>
+                                    <span className="text-[9px] text-gray-400 font-bold uppercase">pts</span>
                                 </div>
                             </div>
                         ))}
