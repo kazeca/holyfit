@@ -3,7 +3,7 @@ import { auth, db } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Flame, Trophy, Calendar, Moon, Sun } from 'lucide-react';
+import { LogOut, Flame, Trophy, Calendar, Moon, Sun, Crown } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useTheme } from '../context/ThemeContext';
@@ -101,7 +101,15 @@ const Profile = () => {
                     </div>
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">{auth.currentUser?.displayName}</h2>
-                <p className="text-gray-400 text-sm">Membro desde {userData?.createdAt ? format(new Date(userData.createdAt), "MMM yyyy", { locale: ptBR }) : '-'}</p>
+                <p className="text-gray-400 text-sm mb-4">Membro desde {userData?.createdAt ? format(new Date(userData.createdAt), "MMM yyyy", { locale: ptBR }) : '-'}</p>
+
+                <button
+                    onClick={() => navigate('/subscribe')}
+                    className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-2 rounded-full font-bold text-sm shadow-lg shadow-orange-500/20 hover:scale-105 transition-transform"
+                >
+                    <Crown size={16} fill="currentColor" />
+                    Assinar Pro
+                </button>
             </div>
 
             {/* Stats Cards */}
