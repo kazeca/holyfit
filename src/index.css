@@ -3,14 +3,37 @@
 @theme {
   --color-neon-purple: #A855F7;
   --color-neon-fuchsia: #D946EF;
+  --color-dark-surface: #1F2937;
 }
 
 body {
-  @apply bg-black text-white;
+  @apply bg-gray-50 text-gray-900 antialiased;
   font-family: 'Inter', sans-serif;
 }
 
-/* Glassmorphism utilities */
-.glass {
-  @apply bg-white/10 backdrop-blur-lg border border-white/20;
+/* Premium Utilities */
+.glass-panel {
+  @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-xl;
+}
+
+.glass-dark {
+  @apply bg-gray-900/90 backdrop-blur-xl border border-white/10 shadow-2xl text-white;
+}
+
+.shadow-soft {
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-purple to-neon-fuchsia;
+}
+
+/* Hide Scrollbar but keep functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

@@ -1,30 +1,43 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Trophy, PlusCircle, User } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Home, Dumbbell, Trophy, Crown, User, Camera } from 'lucide-react';
 
 const BottomNav = () => {
-    const location = useLocation();
-
-    const isActive = (path) => location.pathname === path;
+    const navItems = [
+        { path: '/', icon: Home, label: 'Home' },
+        { path: '/workouts', icon: Dumbbell, label: 'Treinos' },
+        { path: '/checkin', icon: Camera, label: 'Check-in', isCenter: true }, // Center button
+        { path: '/leaderboard', icon: Trophy, label: 'Ranking' },
+        { path: '/profile', icon: User, label: 'Perfil' },
+    ];
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md border-t border-white/10 pb-safe pt-2 px-6 flex justify-around items-center z-50 h-16">
-            <Link to="/" className={`flex flex-col items-center transition-colors ${isActive('/') ? 'text-neon-purple' : 'text-gray-400'}`}>
-                <Trophy size={24} />
-                <span className="text-xs mt-1">Ranking</span>
-            </Link>
-
-            <Link to="/checkin" className="flex flex-col items-center -mt-8">
-                <div className="bg-neon-fuchsia p-3 rounded-full shadow-[0_0_15px_rgba(217,70,239,0.5)] border-4 border-black">
-                    <PlusCircle size={32} color="white" />
-                </div>
-            </Link>
-
-            <Link to="/profile" className={`flex flex-col items-center transition-colors ${isActive('/profile') ? 'text-neon-purple' : 'text-gray-400'}`}>
-                <User size={24} />
-                <span className="text-xs mt-1">Perfil</span>
-            </Link>
-        </nav>
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4">
+            <nav className="bg-white/80 backdrop-blur-xl border border-white/40 rounded-full px-6 py-3 flex items-center justify-between shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+                {navItems.map(({ path, icon: Icon, label, isCenter }) => (
+                    <NavLink
+                        key={path}
+                        to={path}
+                        className={({ isActive }) => `
+                            relative flex items-center justify-center transition-all duration-300
+                            ${isCenter
+                                ? 'bg-gradient-to-tr from-rose-300 to-rose-400 text-white w-14 h-14 rounded-2xl shadow-lg shadow-rose-200 -mt-8 hover:scale-105 hover:-translate-y-1'
+                                : isActive ? 'text-rose-400 scale-110' : 'text-gray-300 hover:text-gray-400'
+                            }
+                        `}
+                    >
+                        {({ isActive }) => (
+                            <>
+                                <Icon size={isCenter ? 28 : 24} strokeWidth={isActive || isCenter ? 2.5 : 2} />
+                                {!isCenter && isActive && (
+                                    <span className="absolute -bottom-2 w-1 h-1 bg-rose-400 rounded-full" />
+                                )}
+                            </>
+                        )}
+                    </NavLink>
+                ))}
+            </nav>
+        </div>
     );
 };
 
