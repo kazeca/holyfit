@@ -52,6 +52,57 @@ const Leaderboard = () => {
         );
     }
 
+    const topThree = leaderboard.slice(0, 3);
+    const rest = leaderboard.slice(3);
+
+    const PodiumItem = ({ user, rank }) => {
+        if (!user) return null;
+
+        let rankStyles = '';
+        let icon = null;
+        let order = '';
+
+        if (rank === 1) {
+            rankStyles = 'from-yellow-300 to-yellow-500 shadow-yellow-500/50 scale-110 z-10';
+            icon = <Crown size={24} className="text-white drop-shadow-md" />;
+            order = 'order-2';
+        } else if (rank === 2) {
+            rankStyles = 'from-gray-300 to-gray-400 shadow-gray-400/50';
+            icon = <span className="text-white font-black text-lg">2</span>;
+            order = 'order-1';
+        } else if (rank === 3) {
+            rankStyles = 'from-orange-300 to-orange-400 shadow-orange-400/50';
+            icon = <span className="text-white font-black text-lg">3</span>;
+            order = 'order-3';
+        }
+
+        return (
+            <div className={`flex flex-col items-center ${order} w-1/3`}>
+                <div className="relative mb-3">
+                    <div className={`w-20 h-20 rounded-full border-4 border-white dark:border-gray-800 shadow-lg overflow-hidden ${rank === 1 ? 'w-24 h-24' : ''}`}>
+                        <img
+                            src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`}
+                            alt={user.displayName}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                    <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br ${rankStyles} flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-800`}>
+                        {icon}
+                    </div>
+                </div>
+
+                <div className="text-center mt-2">
+                    <h3 className="font-bold text-gray-900 dark:text-white text-sm truncate w-24 mx-auto">{user.displayName?.split(' ')[0]}</h3>
+                    <p className="text-purple-500 font-black text-lg">{user.totalPoints}</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">XP</p>
+                    <span className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        Lvl {user.level || 1}
+                    </span>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="min-h-screen pb-24 pt-10 px-6 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
             <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-8 italic tracking-tighter text-center">COMUNIDADE</h1>
@@ -73,23 +124,33 @@ const Leaderboard = () => {
             </div>
 
             {activeTab === 'ranking' ? (
-                <div className="space-y-4">
-                    {leaderboard.map((user, index) => (
-                        <div key={user.id} className="bg-white dark:bg-gray-900 p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 dark:border-gray-800">
-                            <div className={`w-8 h-8 flex items-center justify-center font-black text-lg ${index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-500' : 'text-gray-300'}`}>
-                                {index + 1}
+                <div>
+                    {/* Podium */}
+                    <div className="flex items-end justify-center mb-10 px-2 gap-2">
+                        {topThree[1] && <PodiumItem user={topThree[1]} rank={2} />}
+                        {topThree[0] && <PodiumItem user={topThree[0]} rank={1} />}
+                        {topThree[2] && <PodiumItem user={topThree[2]} rank={3} />}
+                    </div>
+
+                    {/* List */}
+                    <div className="space-y-4">
+                        {rest.map((user, index) => (
+                            <div key={user.id} className="bg-white dark:bg-gray-900 p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 dark:border-gray-800">
+                                <div className="w-8 h-8 flex items-center justify-center font-bold text-gray-400 text-sm">
+                                    {index + 4}
+                                </div>
+                                <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`} alt={user.displayName} className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-800" />
+                                <div className="flex-1">
+                                    <h3 className="font-bold text-gray-900 dark:text-white">{user.displayName}</h3>
+                                    <p className="text-xs text-gray-500 font-medium">Nível {user.level || 1}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="font-black text-gray-900 dark:text-white">{user.totalPoints || 0}</p>
+                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">XP</p>
+                                </div>
                             </div>
-                            <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`} alt={user.displayName} className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 dark:border-gray-800" />
-                            <div className="flex-1">
-                                <h3 className="font-bold text-gray-900 dark:text-white">{user.displayName}</h3>
-                                <p className="text-xs text-gray-500 font-medium">Nível {user.level || 1}</p>
-                            </div>
-                            <div className="text-right">
-                                <p className="font-black text-gray-900 dark:text-white">{user.totalPoints || 0}</p>
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">XP</p>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
             ) : (
                 <div className="space-y-4">
