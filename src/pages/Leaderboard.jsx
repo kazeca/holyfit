@@ -66,7 +66,7 @@ const Leaderboard = () => {
                 </div>
 
                 <div className="text-center mt-2">
-                    <h3 className="font-bold text-gray-900 text-sm truncate w-24 mx-auto">{user.displayName?.split(' ')[0]}</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white text-sm truncate w-24 mx-auto">{user.displayName?.split(' ')[0]}</h3>
                     <p className="text-neon-purple font-black text-lg">{user.totalPoints}</p>
                     <p className="text-[10px] text-gray-400 font-bold uppercase">Points</p>
                 </div>
@@ -75,10 +75,10 @@ const Leaderboard = () => {
     };
 
     return (
-        <div className="min-h-screen pb-32 pt-8 px-6 bg-gray-50">
+        <div className="min-h-screen pb-32 pt-8 px-6 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
             <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-black text-gray-900 tracking-tight">Leaderboard</h1>
-                <div className="bg-white p-3 rounded-2xl shadow-soft">
+                <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">Leaderboard</h1>
+                <div className="bg-white dark:bg-white/10 p-3 rounded-2xl shadow-soft">
                     <Trophy className="text-neon-purple" size={24} />
                 </div>
             </div>
@@ -96,11 +96,11 @@ const Leaderboard = () => {
                 {rest.map((user, index) => (
                     <div
                         key={user.id}
-                        className={`flex items-center gap-4 p-4 rounded-2xl bg-white/80 backdrop-blur-sm border border-white shadow-sm hover:shadow-md transition-all ${auth.currentUser?.uid === user.id ? 'ring-2 ring-neon-purple ring-offset-2 bg-purple-50' : ''}`}
+                        className={`flex items-center gap-4 p-4 rounded-2xl bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border border-white dark:border-white/10 shadow-sm hover:shadow-md transition-all ${auth.currentUser?.uid === user.id ? 'ring-2 ring-neon-purple ring-offset-2 bg-purple-50 dark:bg-purple-900/20' : ''}`}
                     >
                         <span className="text-gray-400 font-bold w-6 text-center text-sm">{index + 4}</span>
 
-                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100">
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800">
                             <img
                                 src={user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName}`}
                                 alt={user.displayName}
@@ -109,16 +109,16 @@ const Leaderboard = () => {
                         </div>
 
                         <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-gray-900 text-sm truncate">
+                            <h3 className="font-bold text-gray-900 dark:text-white text-sm truncate">
                                 {user.displayName || 'Atleta Anônimo'}
                             </h3>
-                            <p className="text-[10px] text-gray-500">
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400">
                                 {user.currentStreak || 0} dias streak
                             </p>
                         </div>
 
                         <div className="text-right">
-                            <span className="block text-sm font-black text-gray-900">
+                            <span className="block text-sm font-black text-gray-900 dark:text-white">
                                 {user.totalPoints}
                             </span>
                             <span className="text-[9px] text-gray-400 font-bold uppercase">pts</span>

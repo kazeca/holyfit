@@ -38,42 +38,42 @@ const EXERCISES = [
 
 const Workouts = () => {
     return (
-        <div className="min-h-screen pb-32 pt-10 px-6 bg-gray-50">
+        <div className="min-h-screen pb-32 pt-10 px-6 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
             {/* Header */}
             <div className="mb-10">
-                <h1 className="text-3xl font-black text-gray-900 mb-8 tracking-tight">Killer Workout</h1>
+                <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-8 tracking-tight">Killer Workout</h1>
 
-                <div className="flex justify-between items-center bg-white rounded-[2rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)]">
+                <div className="flex justify-between items-center bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)]">
                     <div className="text-center flex-1">
                         <div className="flex justify-center mb-3 text-orange-500">
                             <Flame size={28} strokeWidth={2.5} />
                         </div>
                         <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest mb-1">CALORIES</p>
-                        <p className="text-gray-900 font-black text-xl">1,325 <span className="text-xs font-bold text-gray-400">cal</span></p>
+                        <p className="text-gray-900 dark:text-white font-black text-xl">1,325 <span className="text-xs font-bold text-gray-400">cal</span></p>
                     </div>
-                    <div className="w-px h-12 bg-gray-100"></div>
+                    <div className="w-px h-12 bg-gray-100 dark:bg-gray-800"></div>
                     <div className="text-center flex-1">
                         <div className="flex justify-center mb-3 text-blue-500">
                             <Timer size={28} strokeWidth={2.5} />
                         </div>
                         <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest mb-1">TIME</p>
-                        <p className="text-gray-900 font-black text-xl">47.5 <span className="text-xs font-bold text-gray-400">Min</span></p>
+                        <p className="text-gray-900 dark:text-white font-black text-xl">47.5 <span className="text-xs font-bold text-gray-400">Min</span></p>
                     </div>
-                    <div className="w-px h-12 bg-gray-100"></div>
+                    <div className="w-px h-12 bg-gray-100 dark:bg-gray-800"></div>
                     <div className="text-center flex-1">
                         <div className="flex justify-center mb-3 text-purple-500">
                             <BarChart3 size={28} strokeWidth={2.5} />
                         </div>
                         <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest mb-1">LEVEL</p>
-                        <p className="text-gray-900 font-black text-xl">Medium</p>
+                        <p className="text-gray-900 dark:text-white font-black text-xl">Medium</p>
                     </div>
                 </div>
             </div>
 
             {/* Exercise List */}
-            <div className="bg-white rounded-t-[2.5rem] p-8 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] min-h-[50vh]">
+            <div className="bg-white dark:bg-gray-900 rounded-t-[2.5rem] p-8 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] min-h-[50vh]">
                 <div className="flex justify-between items-center mb-8">
-                    <h2 className="text-xl font-bold text-gray-900">Round 1</h2>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Round 1</h2>
                     <span className="text-rose-400 text-sm font-bold bg-rose-50 px-3 py-1 rounded-full">Legs & Butt</span>
                 </div>
 
@@ -81,18 +81,18 @@ const Workouts = () => {
                     {EXERCISES.map((exercise) => (
                         <div key={exercise.id} className="flex items-center gap-5 group cursor-pointer">
                             <div className="relative">
-                                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gray-100 shadow-sm">
+                                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 shadow-sm">
                                     <img src={exercise.image} alt={exercise.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                 </div>
                                 {exercise.completed && (
-                                    <div className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow-md">
+                                    <div className="absolute -top-2 -right-2 bg-white dark:bg-gray-800 rounded-full p-1 shadow-md">
                                         <CheckCircle2 size={18} className="text-orange-500 fill-orange-100" />
                                     </div>
                                 )}
                             </div>
 
                             <div className="flex-1">
-                                <h3 className="font-bold text-gray-900 text-lg">{exercise.name}</h3>
+                                <h3 className="font-bold text-gray-900 dark:text-white text-lg">{exercise.name}</h3>
                                 <p className="text-gray-400 text-xs mt-1 font-medium tracking-wide">
                                     {exercise.duration} <span className="mx-2 text-gray-300">|</span> {exercise.reps}
                                 </p>

@@ -24,7 +24,7 @@ const Dashboard = () => {
     if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>;
 
     return (
-        <div className="min-h-screen pb-32 pt-8 px-6 bg-gray-50 font-sans">
+        <div className="min-h-screen pb-32 pt-8 px-6 bg-gray-50 dark:bg-gray-950 font-sans transition-colors duration-300">
             {/* Header */}
             {/* Header - Premium Dark Card */}
             <div className="bg-[#1C1C1E] rounded-[2.5rem] p-8 mb-8 shadow-2xl relative overflow-hidden">
