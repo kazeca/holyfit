@@ -3,15 +3,18 @@ import { auth, db } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Flame, Trophy, Calendar, Moon, Sun, Crown } from 'lucide-react';
+import { LogOut, Flame, Trophy, Calendar, Moon, Sun, Crown, X, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useTheme } from '../context/ThemeContext';
+import ActivityHeatmap from '../components/ActivityHeatmap';
+import { BADGES } from '../utils/badges';
 
 const Profile = () => {
     const [userData, setUserData] = useState(null);
     const [workouts, setWorkouts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedWorkout, setSelectedWorkout] = useState(null);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
 
@@ -112,6 +115,15 @@ const Profile = () => {
                 </button>
             </div>
 
+            {/* Activity Heatmap */}
+            <div className="mb-8 bg-white dark:bg-white/5 p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span className="w-1 h-4 bg-green-500 rounded-full"></span>
+                    Histórico de Atividades
+                </h3>
+                <ActivityHeatmap data={workouts.map(w => ({ date: new Date(w.createdAt.seconds * 1000), count: 1 }))} />
+            </div>
+
             {/* Stats Cards */}
             <div className="grid grid-cols-2 gap-4 mb-8">
                 <div className="bg-white dark:bg-white/5 p-4 rounded-2xl flex flex-col items-center justify-center border border-gray-100 dark:border-white/5 shadow-sm">
@@ -123,6 +135,32 @@ const Profile = () => {
                     <Calendar className="text-neon-fuchsia mb-2" size={24} />
                     <span className="text-2xl font-black text-gray-900 dark:text-white">{workouts.length}</span>
                     <span className="text-xs text-gray-400 uppercase tracking-wider">Treinos</span>
+                </div>
+            </div>
+
+            {/* Badges */}
+            <div className="mb-8">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <span className="w-1 h-6 bg-yellow-500 rounded-full"></span>
+                    Conquistas
+                </h3>
+                <div className="grid grid-cols-3 gap-3">
+                    {BADGES.map((badge) => {
+                        const isUnlocked = userData && badge.condition(userData, workouts);
+                        const Icon = badge.icon;
+
+                        return (
+                            <div
+                                key={badge.id}
+                                className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all ${isUnlocked ? 'bg-white dark:bg-white/5 border-gray-100 dark:border-white/5 shadow-sm' : 'bg-gray-50 dark:bg-white/5 border-transparent opacity-50 grayscale'}`}
+                            >
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${isUnlocked ? badge.bgColor : 'bg-gray-200 dark:bg-gray-700'}`}>
+                                    <Icon size={20} className={isUnlocked ? badge.color : 'text-gray-400'} />
+                                </div>
+                                <span className="text-xs font-bold text-center text-gray-900 dark:text-white leading-tight">{badge.label}</span>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -140,7 +178,11 @@ const Profile = () => {
             ) : (
                 <div className="grid grid-cols-3 gap-2">
                     {workouts.map((workout) => (
-                        <div key={workout.id} className="aspect-square relative group overflow-hidden rounded-lg bg-gray-800">
+                        <div
+                            key={workout.id}
+                            onClick={() => setSelectedWorkout(workout)}
+                            className="aspect-square relative group overflow-hidden rounded-lg bg-gray-800 cursor-pointer"
+                        >
                             <img
                                 src={workout.imageUrl}
                                 alt="Workout"
@@ -155,8 +197,66 @@ const Profile = () => {
                     ))}
                 </div>
             )}
+            {/* Workout Details Modal */}
+            {selectedWorkout && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-gray-900 rounded-[2rem] overflow-hidden w-full max-w-md shadow-2xl">
+                        <div className="relative h-48">
+                            <img src={selectedWorkout.imageUrl} alt="Workout" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                            <button
+                                onClick={() => setSelectedWorkout(null)}
+                                className="absolute top-4 right-4 p-2 bg-black/40 backdrop-blur-md rounded-full text-white hover:bg-black/60"
+                            >
+                                <X size={20} />
+                            </button>
+                            <div className="absolute bottom-4 left-4 text-white">
+                                <h3 className="text-2xl font-black">{selectedWorkout.title}</h3>
+                                <p className="text-gray-300 text-sm">{format(new Date(selectedWorkout.createdAt.seconds * 1000), "dd 'de' MMMM 'às' HH:mm", { locale: ptBR })}</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6">
+                            <div className="flex justify-between items-center mb-6">
+                                <div className="flex items-center gap-2 text-orange-500 font-bold">
+                                    <Flame size={20} />
+                                    <span>{selectedWorkout.calories} kcal</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-blue-500 font-bold">
+                                    <ClockIcon size={20} />
+                                    <span>{selectedWorkout.duration} min</span>
+                                </div>
+                                <div className="flex items-center gap-2 text-purple-500 font-bold">
+                                    <Trophy size={20} />
+                                    <span>+100 XP</span>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 mb-6">
+                                <h4 className="font-bold text-gray-900 dark:text-white">Exercícios Realizados</h4>
+                                {selectedWorkout.exercises?.map((ex, i) => (
+                                    <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                                        <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-xs">✓</div>
+                                        <span className="text-gray-700 dark:text-gray-300 font-medium">{ex.name}</span>
+                                        <span className="ml-auto text-xs text-gray-400">{ex.sets}x {ex.reps}</span>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button className="w-full py-4 bg-gray-100 dark:bg-gray-800 rounded-xl font-bold text-gray-900 dark:text-white flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                                <Share2 size={20} />
+                                Compartilhar Conquista
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
+
+const ClockIcon = ({ size }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+);
 
 export default Profile;

@@ -145,7 +145,7 @@ const Dashboard = () => {
                 >
                     <div className="flex justify-between items-start">
                         <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold">Meta Semanal</span>
-                        <Settings size={16} className="text-white/80" />
+                        <Settings size={16} className="text-white/80 cursor-pointer hover:text-white" onClick={(e) => { e.stopPropagation(); navigate('/settings'); }} />
                     </div>
 
                     {/* Fake Bar Chart */}

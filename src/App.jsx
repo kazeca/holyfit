@@ -10,11 +10,26 @@ import Subscribe from './pages/Subscribe';
 import BottomNav from './components/BottomNav';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import Settings from './pages/Settings';
+import CreateWorkout from './pages/CreateWorkout';
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
+            <BottomNav />
+          </ProtectedRoute>
+        } />
+        <Route path="/create-workout" element={
+          <ProtectedRoute>
+            <CreateWorkout />
+            <BottomNav />
+          </ProtectedRoute>
+        } />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>

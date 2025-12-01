@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Timer, Flame, BarChart3, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Timer, Flame, BarChart3, ChevronRight, CheckCircle2, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import WorkoutPlayer from '../components/WorkoutPlayer';
 
 const EXERCISES = [
@@ -38,6 +39,7 @@ const EXERCISES = [
 ];
 
 const Workouts = () => {
+    const navigate = useNavigate();
     const [selectedWorkout, setSelectedWorkout] = useState(null);
 
     const handleWorkoutClick = () => {
@@ -52,7 +54,17 @@ const Workouts = () => {
         <div className="min-h-screen pb-32 pt-10 px-6 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
             {/* Header */}
             <div className="mb-10">
-                <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-8 tracking-tight">Killer Workout</h1>
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-white italic tracking-tighter">
+                        TREINOS
+                    </h1>
+                    <button
+                        onClick={() => navigate('/create-workout')}
+                        className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center text-white dark:text-black shadow-lg active:scale-90 transition-transform"
+                    >
+                        <Plus size={20} />
+                    </button>
+                </div>
 
                 <div className="flex justify-between items-center bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)]">
                     <div className="text-center flex-1">
