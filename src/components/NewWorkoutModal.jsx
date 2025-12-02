@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ChevronLeft, Clock, Zap, MapPin, Flame, Save, Dumbbell, Footprints, Flower, Bike, Swords } from 'lucide-react';
+import { X, ChevronLeft, Clock, Zap, MapPin, Flame, Save, Dumbbell, Footprints, Flower, Bike, Swords, Waves } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { collection, addDoc, updateDoc, doc, increment, serverTimestamp } from 'firebase/firestore';
 
@@ -45,6 +45,13 @@ const SPORTS = [
         icon: Flame,
         image: 'https://images.unsplash.com/photo-1517963879466-e825c2cbd9ae?auto=format&fit=crop&w=500&q=80',
         color: 'border-yellow-500'
+    },
+    {
+        id: 'swim',
+        name: 'Natação',
+        icon: Waves,
+        image: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=500&q=80',
+        color: 'border-sky-500'
     }
 ];
 
@@ -63,20 +70,40 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
 
     const calculateCalories = () => {
         if (!selectedSport) return 0;
-        let met = 1;
-        switch (selectedSport.id) {
-            case 'gym': met = 6; break;
-            case 'run': met = 12; break;
-            case 'yoga': met = 4; break;
-            case 'bike': met = 8; break;
-            case 'fight': met = 12; break;
-            case 'crossfit': met = 12; break;
-            default: met = 5;
+
+        // Average calories per minute for women (~60-65kg)
+        const caloriesPerMinute = {
+            gym: 4.5,
+            run: 10,
+            yoga: 3,
+            bike: 7,
+            fight: 9,
+            crossfit: 11,
+            swim: 8
+        };
+
+        // Average calories per km for women
+        const caloriesPerKm = {
+            run: 60,
+            bike: 25,
+            swim: 200 // Estimativa alta por ser muito denso
+        };
+
+        let baseCalories = 0;
+
+        // Prioritize distance calculation for Run/Bike if distance is provided
+        if (distance && Number(distance) > 0 && (selectedSport.id === 'run' || selectedSport.id === 'bike')) {
+            baseCalories = Number(distance) * (caloriesPerKm[selectedSport.id] || 0);
+        } else {
+            // Fallback to time-based calculation
+            baseCalories = duration * (caloriesPerMinute[selectedSport.id] || 5);
         }
+
         let multiplier = 1;
         if (intensity === 'low') multiplier = 0.8;
         if (intensity === 'high') multiplier = 1.2;
-        return Math.round(met * duration * multiplier);
+
+        return Math.round(baseCalories * multiplier);
     };
 
     const calories = calculateCalories();

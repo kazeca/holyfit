@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dumbbell, Footprints, Flower, Bike, Swords, Flame, Clock, MapPin, Zap } from 'lucide-react';
+import { Dumbbell, Footprints, Flower, Bike, Swords, Flame, Clock, MapPin, Zap, Waves } from 'lucide-react';
 
 const ICONS = {
     gym: Dumbbell,
@@ -7,7 +7,8 @@ const ICONS = {
     yoga: Flower,
     bike: Bike,
     fight: Swords,
-    crossfit: Flame
+    crossfit: Flame,
+    swim: Waves
 };
 
 const COLORS = {
@@ -16,7 +17,8 @@ const COLORS = {
     yoga: 'text-emerald-500 bg-emerald-500/10',
     bike: 'text-cyan-500 bg-cyan-500/10',
     fight: 'text-red-500 bg-red-500/10',
-    crossfit: 'text-yellow-500 bg-yellow-500/10'
+    crossfit: 'text-yellow-500 bg-yellow-500/10',
+    swim: 'text-sky-500 bg-sky-500/10'
 };
 
 const ActivityCard = ({ workout }) => {
