@@ -5,13 +5,40 @@ import { completeChallengeWithPhoto } from '../utils/challengeService';
 import confetti from 'canvas-confetti';
 import { auth } from '../firebase';
 
-const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) => {
+const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete, onCancel }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const fileInputRef = useRef(null);
+
+    // Dynamic content based on action type
+    const getContent = () => {
+        if (actionType === 'workout') {
+            return {
+                title: 'Comprovar Treino',
+                description: data.workoutName || 'Treino completado',
+                xp: data.xp || 100,
+                instruction: 'Tire uma foto do seu treino para comprovar!',
+                hint: '📸 Mostre você na academia ou fazendo exercício',
+                successTitle: 'Treino Registrado!',
+                gradient: 'from-orange-500 to-red-600'
+            };
+        }
+        // Default: challenge
+        return {
+            title: 'Comprovar Desafio',
+            description: data.task || data.description,
+            xp: data.reward || data.xp,
+            instruction: 'Tire uma foto comprovando que você completou o desafio!',
+            hint: '📸 A foto será enviada para o feed',
+            successTitle: 'Desafio Completado!',
+            gradient: 'from-purple-600 to-pink-600'
+        };
+    };
+
+    const content = getContent();
 
     const handleFileSelect = (e) => {
         const file = e.target.files?.[0];
@@ -52,11 +79,21 @@ const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) =
                 return;
             }
 
-            // Complete challenge
-            await completeChallengeWithPhoto(selectedFile, {
-                ...challenge,
-                userLevel
-            }, validation.photoHash);
+            // Complete action based on type
+            if (actionType === 'workout') {
+                // Will implement workout completion service
+                const { completeWorkoutWithPhoto } = await import('../utils/challengeService');
+                await completeWorkoutWithPhoto(selectedFile, {
+                    ...data,
+                    userLevel
+                }, validation.photoHash);
+            } else {
+                // Challenge
+                await completeChallengeWithPhoto(selectedFile, {
+                    ...data,
+                    userLevel
+                }, validation.photoHash);
+            }
 
             // Success!
             setSuccess(true);
@@ -68,8 +105,8 @@ const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) =
             }, 3000);
 
         } catch (err) {
-            console.error('Error completing challenge:', err);
-            setError(err.message || 'Erro ao completar desafio. Tente novamente.');
+            console.error(`Error completing ${actionType}:`, err);
+            setError(err.message || `Erro ao completar ${actionType === 'workout' ? 'treino' : 'desafio'}. Tente novamente.`);
         } finally {
             setLoading(false);
         }
@@ -94,13 +131,17 @@ const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) =
                 ...defaults,
                 particleCount,
                 origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
-                colors: ['#A855F7', '#D946EF', '#FBC02D', '#F97316']
+                colors: actionType === 'workout'
+                    ? ['#F97316', '#EA580C', '#FCD34D']
+                    : ['#A855F7', '#D946EF', '#FBC02D', '#F97316']
             });
             confetti({
                 ...defaults,
                 particleCount,
                 origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
-                colors: ['#A855F7', '#D946EF', '#FBC02D', '#F97316']
+                colors: actionType === 'workout'
+                    ? ['#F97316', '#EA580C', '#FCD34D']
+                    : ['#A855F7', '#D946EF', '#FBC02D', '#F97316']
             });
         }, 250);
     };
@@ -108,13 +149,13 @@ const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) =
     if (success) {
         return (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-                <div className="bg-gradient-to-br from-purple-600 to-pink-600 rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl text-center animate-in zoom-in duration-300">
+                <div className={`bg-gradient-to-br ${content.gradient} rounded-[2.5rem] p-8 w-full max-w-md shadow-2xl text-center animate-in zoom-in duration-300`}>
                     <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-yellow-400 flex items-center justify-center">
                         <Check size={48} className="text-yellow-900" strokeWidth={4} />
                     </div>
-                    <h2 className="text-3xl font-black text-white mb-2">Desafio Completado!</h2>
+                    <h2 className="text-3xl font-black text-white mb-2">{content.successTitle}</h2>
                     <p className="text-white/90 text-lg font-medium mb-4">
-                        Você ganhou <span className="font-black text-yellow-300">+{challenge.reward} XP</span>
+                        Você ganhou <span className="font-black text-yellow-300">+{content.xp} XP</span>
                     </p>
                     <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
                         <p className="text-white/80 text-sm">
@@ -130,9 +171,9 @@ const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) =
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
             <div className="bg-white dark:bg-gray-900 rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+                <div className={`bg-gradient-to-r ${content.gradient} p-6 text-white`}>
                     <div className="flex justify-between items-center mb-3">
-                        <h3 className="text-xl font-black">Comprovar Desafio</h3>
+                        <h3 className="text-xl font-black">{content.title}</h3>
                         <button
                             onClick={onCancel}
                             className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
@@ -141,9 +182,9 @@ const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) =
                             <X size={20} />
                         </button>
                     </div>
-                    <p className="text-white/90 text-sm font-medium">{challenge.task}</p>
+                    <p className="text-white/90 text-sm font-medium">{content.description}</p>
                     <span className="inline-block mt-2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-black">
-                        +{challenge.reward} XP
+                        +{content.xp} XP
                     </span>
                 </div>
 
@@ -153,14 +194,13 @@ const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) =
                         // Camera Input
                         <div className="space-y-4">
                             <div className="text-center">
-                                <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                                    <Camera size={48} className="text-purple-600" />
+                                <div className={`w-24 h-24 mx-auto mb-4 rounded-full ${actionType === 'workout' ? 'bg-orange-100 dark:bg-orange-900/20' : 'bg-purple-100 dark:bg-purple-900/20'} flex items-center justify-center`}>
+                                    <Camera size={48} className={actionType === 'workout' ? 'text-orange-600' : 'text-purple-600'} />
                                 </div>
                                 <p className="text-gray-600 dark:text-gray-300 font-medium mb-2">
-                                    Tire uma foto comprovando que você completou o desafio!
-                                </p>
+                                    {content.instruction}                                </p>
                                 <p className="text-gray-400 text-sm">
-                                    📸 A foto será enviada para o feed
+                                    {content.hint}
                                 </p>
                             </div>
 
@@ -171,12 +211,12 @@ const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) =
                                 capture="environment"
                                 onChange={handleFileSelect}
                                 className="hidden"
-                                id="challenge-photo-input"
+                                id="proof-photo-input"
                             />
 
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-black text-lg hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-purple-500/30"
+                                className={`w-full py-4 bg-gradient-to-r ${content.gradient} text-white rounded-2xl font-black text-lg hover:scale-105 active:scale-95 transition-transform shadow-lg ${actionType === 'workout' ? 'shadow-orange-500/30' : 'shadow-purple-500/30'}`}
                             >
                                 <Camera size={24} className="inline mr-2" />
                                 Abrir Câmera
@@ -217,7 +257,7 @@ const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) =
                                 <button
                                     onClick={handleConfirm}
                                     disabled={loading}
-                                    className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-transform shadow-lg shadow-purple-500/30 disabled:opacity-50 disabled:hover:scale-100"
+                                    className={`flex-1 py-4 bg-gradient-to-r ${content.gradient} text-white rounded-2xl font-bold hover:scale-105 active:scale-95 transition-transform shadow-lg ${actionType === 'workout' ? 'shadow-orange-500/30' : 'shadow-purple-500/30'} disabled:opacity-50 disabled:hover:scale-100`}
                                 >
                                     {loading ? (
                                         <>
@@ -240,4 +280,4 @@ const ChallengePhotoCapture = ({ challenge, userLevel, onComplete, onCancel }) =
     );
 };
 
-export default ChallengePhotoCapture;
+export default PhotoProofModal;

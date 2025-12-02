@@ -25,17 +25,17 @@ export const compressImage = async (file) => {
 };
 
 /**
- * Upload challenge photo to Firebase Storage
+ * Upload photo to Firebase Storage (generic for challenges and workouts)
  * Returns download URL
  */
-export const uploadChallengePhoto = async (file, userId) => {
+export const uploadProofPhoto = async (file, userId, actionType = 'challenges') => {
     try {
         // Compress image
         const compressedFile = await compressImage(file);
 
         // Create storage reference
         const timestamp = Date.now();
-        const storageRef = ref(storage, `challenges/${userId}/${timestamp}.jpg`);
+        const storageRef = ref(storage, `proofs/${actionType}/${userId}/${timestamp}.jpg`);
 
         // Upload
         await uploadBytes(storageRef, compressedFile);
@@ -47,6 +47,11 @@ export const uploadChallengePhoto = async (file, userId) => {
         console.error('Error uploading photo:', error);
         throw new Error('Erro ao fazer upload da foto. Tente novamente.');
     }
+};
+
+// Keep old function for backward compatibility
+export const uploadChallengePhoto = async (file, userId) => {
+    return uploadProofPhoto(file, userId, 'challenges');
 };
 
 /**
@@ -77,6 +82,31 @@ export const saveChallengeCompletion = async (data) => {
 };
 
 /**
+ * Save workout completion to Firestore
+ */
+export const saveWorkoutCompletion = async (data) => {
+    try {
+        const docRef = await addDoc(collection(db, 'workout_completions'), {
+            userId: data.userId,
+            userName: data.userName,
+            userAvatar: data.userAvatar,
+            workoutName: data.workoutName,
+            exercises: data.exercises || [],
+            duration: data.duration || 0,
+            photoURL: data.photoURL,
+            photoHash: data.photoHash,
+            xpAwarded: data.xpAwarded,
+            completedAt: serverTimestamp()
+        });
+
+        return docRef.id;
+    } catch (error) {
+        console.error('Error saving workout completion:', error);
+        throw new Error('Erro ao salvar treino.');
+    }
+};
+
+/**
  * Update user stats after challenge completion
  */
 export const updateUserChallengeStats = async (userId, xp) => {
@@ -94,17 +124,33 @@ export const updateUserChallengeStats = async (userId, xp) => {
 };
 
 /**
- * Create automatic feed post for challenge completion
+ * Update user stats after workout completion
  */
-export const createChallengeFeedPost = async (data) => {
+export const updateUserWorkoutStats = async (userId, xp) => {
+    try {
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, {
+            totalPoints: increment(xp),
+            totalWorkouts: increment(1)
+        });
+    } catch (error) {
+        console.error('Error updating user stats:', error);
+        throw new Error('Erro ao atualizar estatísticas.');
+    }
+};
+
+/**
+ * Create automatic feed post (generic)
+ */
+export const createFeedPost = async (actionType, data) => {
     try {
         await addDoc(collection(db, 'feed_posts'), {
             userId: data.userId,
             userName: data.userName,
             userLevel: data.userLevel,
             userAvatar: data.userAvatar,
-            activityType: 'Desafio Completado',
-            description: `Completou: ${data.challengeDescription}`,
+            activityType: actionType,
+            description: data.description,
             photoURL: data.photoURL,
             xpEarned: data.xpAwarded,
             likes: 0,
@@ -114,6 +160,14 @@ export const createChallengeFeedPost = async (data) => {
         console.error('Error creating feed post:', error);
         // Don't throw - feed post is optional
     }
+};
+
+// Keep old function for backward compatibility
+export const createChallengeFeedPost = async (data) => {
+    return createFeedPost('Desafio Completado', {
+        ...data,
+        description: `Completou: ${data.challengeDescription}`
+    });
 };
 
 /**
@@ -126,7 +180,7 @@ export const completeChallengeWithPhoto = async (photoFile, challengeData, photo
 
     try {
         // 1. Upload photo
-        const photoURL = await uploadChallengePhoto(photoFile, user.uid);
+        const photoURL = await uploadProofPhoto(photoFile, user.uid, 'challenges');
 
         // 2. Save completion
         const completionData = {
@@ -154,6 +208,50 @@ export const completeChallengeWithPhoto = async (photoFile, challengeData, photo
         return { success: true, photoURL };
     } catch (error) {
         console.error('Error completing challenge:', error);
+        throw error;
+    }
+};
+
+/**
+ * Complete workout with photo proof
+ * Main orchestration function for workouts
+ */
+export const completeWorkoutWithPhoto = async (photoFile, workoutData, photoHash) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Usuário não autenticado');
+
+    try {
+        // 1. Upload photo
+        const photoURL = await uploadProofPhoto(photoFile, user.uid, 'workouts');
+
+        // 2. Save completion
+        const completionData = {
+            userId: user.uid,
+            userName: user.displayName || 'Usuário',
+            userAvatar: user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}`,
+            workoutName: workoutData.workoutName || 'Treino',
+            exercises: workoutData.exercises || [],
+            duration: workoutData.duration || 0,
+            photoURL,
+            photoHash,
+            xpAwarded: workoutData.xp || 100
+        };
+
+        await saveWorkoutCompletion(completionData);
+
+        // 3. Update user stats
+        await updateUserWorkoutStats(user.uid, completionData.xpAwarded);
+
+        // 4. Create feed post
+        await createFeedPost('Treino Completado', {
+            ...completionData,
+            userLevel: workoutData.userLevel || 1,
+            description: `Completou: ${completionData.workoutName}`
+        });
+
+        return { success: true, photoURL };
+    } catch (error) {
+        console.error('Error completing workout:', error);
         throw error;
     }
 };

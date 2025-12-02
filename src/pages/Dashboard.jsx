@@ -6,7 +6,7 @@ import { useGamification } from '../hooks/useGamification';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import OnboardingModal from '../components/OnboardingModal';
-import ChallengePhotoCapture from '../components/ChallengePhotoCapture';
+import PhotoProofModal from '../components/PhotoProofModal';
 
 const Dashboard = () => {
     const [userData, setUserData] = useState(null);
@@ -117,16 +117,26 @@ const Dashboard = () => {
 
     const saveHydrationGoal = async () => {
         if (!auth.currentUser) return;
-        const userRef = doc(db, 'users', auth.currentUser.uid);
-        await updateDoc(userRef, { hydrationGoal });
-        setShowGoalModal(false);
+        try {
+            const userRef = doc(db, 'users', auth.currentUser.uid);
+            await updateDoc(userRef, { hydrationGoal });
+            setShowGoalModal(false);
+        } catch (error) {
+            console.error('Error saving hydration goal:', error);
+            alert('Erro ao salvar meta de hidratação. Tente novamente.');
+        }
     };
 
     const saveWorkoutGoal = async () => {
         if (!auth.currentUser) return;
-        const userRef = doc(db, 'users', auth.currentUser.uid);
-        await updateDoc(userRef, { workoutGoal });
-        setShowWorkoutGoalModal(false);
+        try {
+            const userRef = doc(db, 'users', auth.currentUser.uid);
+            await updateDoc(userRef, { workoutGoal });
+            setShowWorkoutGoalModal(false);
+        } catch (error) {
+            console.error('Error saving workout goal:', error);
+            alert('Erro ao salvar meta. Tente novamente.');
+        }
     };
 
     if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>;
@@ -428,8 +438,9 @@ const Dashboard = () => {
 
             {/* Challenge Photo Capture Modal */}
             {showPhotoCapture && (
-                <ChallengePhotoCapture
-                    challenge={getDailyChallenge()}
+                <PhotoProofModal
+                    actionType="challenge"
+                    data={getDailyChallenge()}
                     userLevel={currentLevel}
                     onComplete={handleChallengeComplete}
                     onCancel={handlePhotoCaptureCancel}

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { X, Clock, Zap, MapPin, Flame, Save } from 'lucide-react';
-import { db, auth } from '../firebase';
-import { collection, addDoc, updateDoc, doc, increment, serverTimestamp } from 'firebase/firestore';
+import { X, Clock, Zap, MapPin, Flame, Camera } from 'lucide-react';
+import { useGamification } from '../hooks/useGamification';
+import PhotoProofModal from './PhotoProofModal';
 
 const LogWorkoutModal = ({ sport, onClose }) => {
     const [duration, setDuration] = useState(30); // minutes
     const [intensity, setIntensity] = useState('medium'); // low, medium, high
     const [distance, setDistance] = useState(''); // km (optional)
-    const [loading, setLoading] = useState(false);
+    const [showPhotoModal, setShowPhotoModal] = useState(false);
+    const { calculateLevel } = useGamification();
 
     const calculateCalories = () => {
         let met = 1;
@@ -30,39 +31,17 @@ const LogWorkoutModal = ({ sport, onClose }) => {
 
     const calories = calculateCalories();
 
-    const handleSave = async () => {
-        if (!auth.currentUser) return;
-        setLoading(true);
+    const handleOpenPhotoModal = () => {
+        setShowPhotoModal(true);
+    };
 
-        try {
-            // 1. Save to 'workouts' collection
-            await addDoc(collection(db, 'workouts'), {
-                userId: auth.currentUser.uid,
-                sportId: sport.id,
-                sportName: sport.name,
-                duration: Number(duration),
-                intensity,
-                distance: distance ? Number(distance) : null,
-                calories,
-                timestamp: serverTimestamp(),
-                date: new Date().toISOString()
-            });
+    const handlePhotoComplete = () => {
+        setShowPhotoModal(false);
+        onClose(); // Close main modal after photo is saved
+    };
 
-            // 2. Update user stats
-            const userRef = doc(db, 'users', auth.currentUser.uid);
-            await updateDoc(userRef, {
-                totalPoints: increment(calories), // 1 cal = 1 XP
-                caloriesBurnedToday: increment(calories),
-                workoutsCompleted: increment(1),
-                lastWorkoutDate: new Date().toISOString().split('T')[0] // Store date to handle daily reset logic later
-            });
-
-            onClose();
-        } catch (error) {
-            console.error("Error logging workout:", error);
-        } finally {
-            setLoading(false);
-        }
+    const handlePhotoCancel = () => {
+        setShowPhotoModal(false);
     };
 
     return (
@@ -161,18 +140,29 @@ const LogWorkoutModal = ({ sport, onClose }) => {
                 </div>
 
                 <button
-                    onClick={handleSave}
-                    disabled={loading}
-                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    onClick={handleOpenPhotoModal}
+                    className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-orange-500/30 active:scale-95 transition-transform flex items-center justify-center gap-2"
                 >
-                    {loading ? (
-                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                        <>
-                            <Save size={20} /> Registrar Treino
-                        </>
-                    )}
+                    <Camera size={20} /> Comprovar com Foto
                 </button>
+
+                {/* Photo Proof Modal */}
+                {showPhotoModal && (
+                    <PhotoProofModal
+                        actionType="workout"
+                        data={{
+                            workoutName: sport.name,
+                            duration,
+                            intensity,
+                            distance,
+                            xp: calories,
+                            exercises: []
+                        }}
+                        userLevel={calculateLevel(0)} // Get from user context if available
+                        onComplete={handlePhotoComplete}
+                        onCancel={handlePhotoCancel}
+                    />
+                )}
             </div>
         </div>
     );
