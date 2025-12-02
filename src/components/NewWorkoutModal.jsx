@@ -109,10 +109,16 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
     const calories = calculateCalories();
 
     const handleSave = async () => {
-        if (!auth.currentUser || !selectedSport) return;
+        if (!auth.currentUser) {
+            alert("Erro: Usuário não autenticado. Tente fazer login novamente.");
+            return;
+        }
+        if (!selectedSport) return;
+
         setLoading(true);
 
         try {
+            // 1. Save to 'workouts' collection
             await addDoc(collection(db, 'workouts'), {
                 userId: auth.currentUser.uid,
                 sportId: selectedSport.id,
@@ -125,7 +131,14 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
                 date: new Date().toISOString()
             });
 
+            // 2. Update user stats
             const userRef = doc(db, 'users', auth.currentUser.uid);
+
+            // Use setDoc with merge to ensure it works even if doc is missing (defensive)
+            // But we need to import setDoc first. For now, let's stick to updateDoc but catch its specific error
+            // Or better, just try updateDoc and if it fails, maybe the user doc doesn't exist?
+            // Actually, let's just alert if it fails.
+
             await updateDoc(userRef, {
                 totalPoints: increment(calories),
                 caloriesBurnedToday: increment(calories),
@@ -137,6 +150,7 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
             onClose();
         } catch (error) {
             console.error("Error logging workout:", error);
+            alert(`Erro ao salvar treino: ${error.message}`);
         } finally {
             setLoading(false);
         }
