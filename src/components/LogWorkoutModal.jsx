@@ -31,7 +31,8 @@ const LogWorkoutModal = ({ sport, onClose }) => {
 
     const calories = calculateCalories();
 
-    const handleOpenPhotoModal = () => {
+    const handleRegisterWorkout = () => {
+        // Directly open photo modal
         setShowPhotoModal(true);
     };
 
@@ -140,10 +141,10 @@ const LogWorkoutModal = ({ sport, onClose }) => {
                 </div>
 
                 <button
-                    onClick={handleOpenPhotoModal}
-                    className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-orange-500/30 active:scale-95 transition-transform flex items-center justify-center gap-2"
+                    onClick={handleRegisterWorkout}
+                    className="w-full py-4 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-purple-500/30 active:scale-95 transition-transform flex items-center justify-center gap-2"
                 >
-                    <Camera size={20} /> Comprovar com Foto
+                    <Camera size={20} /> REGISTRAR TREINO
                 </button>
 
                 {/* Photo Proof Modal */}
@@ -158,9 +159,10 @@ const LogWorkoutModal = ({ sport, onClose }) => {
                             xp: calories,
                             exercises: []
                         }}
-                        userLevel={calculateLevel(0)} // Get from user context if available
+                        userLevel={calculateLevel(0)}
                         onComplete={handlePhotoComplete}
                         onCancel={handlePhotoCancel}
+                        autoOpenCamera={true}
                     />
                 )}
             </div>

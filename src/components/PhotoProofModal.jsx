@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, X, Check, RotateCcw, Loader2 } from 'lucide-react';
 import { validateChallengePhoto } from '../utils/challengeValidation';
 import { completeChallengeWithPhoto } from '../utils/challengeService';
 import confetti from 'canvas-confetti';
 import { auth } from '../firebase';
 
-const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete, onCancel }) => {
+const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete, onCancel, autoOpenCamera = false }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -39,6 +39,17 @@ const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete
     };
 
     const content = getContent();
+
+    // Auto-open camera if requested
+    useEffect(() => {
+        if (autoOpenCamera && fileInputRef.current && !previewUrl) {
+            // Small delay to ensure modal is rendered
+            const timer = setTimeout(() => {
+                fileInputRef.current?.click();
+            }, 300);
+            return () => clearTimeout(timer);
+        }
+    }, [autoOpenCamera, previewUrl]);
 
     const handleFileSelect = (e) => {
         const file = e.target.files?.[0];
