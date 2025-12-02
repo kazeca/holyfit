@@ -203,14 +203,14 @@ const Dashboard = () => {
                     <div className="relative z-10 mb-2">
                         <div className="flex items-center gap-3 mb-4">
                             <span className="flex items-center gap-1 text-xs font-medium text-gray-400 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
-                                <ClockIcon size={12} /> 25min
+                                <ClockIcon size={12} /> {userData?.workoutsCompleted || 0} treinos
                             </span>
                             <span className="flex items-center gap-1 text-xs font-medium text-gray-400 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
-                                <Flame size={12} /> 412kcal
+                                <Flame size={12} /> {userData?.caloriesBurnedToday || 0}kcal
                             </span>
                         </div>
-                        <h3 className="text-2xl font-bold leading-tight mb-1">Upper Strength 2</h3>
-                        <p className="text-gray-400 text-sm">8 Series Workout</p>
+                        <h3 className="text-2xl font-bold leading-tight mb-1">Hoje</h3>
+                        <p className="text-gray-400 text-sm">Resumo da Atividade</p>
                     </div>
 
                     <button className="absolute bottom-6 right-6 w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform">
