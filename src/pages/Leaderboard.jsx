@@ -240,8 +240,12 @@ const Leaderboard = () => {
 
                                     {/* Content */}
                                     <div className="bg-white/5 border border-white/5 rounded-xl p-3">
-                                        <p className="text-white font-bold text-sm mb-2">🏃 {post.sportName}</p>
-                                        <div className="flex items-center gap-3 text-xs text-gray-300">
+                                        <p className="text-gray-300 text-sm mb-2">
+                                            completou <span className="font-bold text-white">{post.sportName}</span>
+                                            {post.distance && <span> ({post.distance} km, {post.calories} kcal)</span>}
+                                            {!post.distance && <span> ({post.calories} kcal)</span>}
+                                        </p>
+                                        <div className="flex items-center gap-3 text-xs text-gray-400">
                                             <span className="flex items-center gap-1">
                                                 🔥 {post.calories} kcal
                                             </span>

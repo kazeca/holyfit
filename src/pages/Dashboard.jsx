@@ -5,6 +5,7 @@ import { Activity, Droplets, Flame, Zap, Plus, X, Settings, HelpCircle, Crown, L
 import { useGamification } from '../hooks/useGamification';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
+import OnboardingModal from '../components/OnboardingModal';
 
 const Dashboard = () => {
     const [userData, setUserData] = useState(null);
@@ -13,6 +14,7 @@ const Dashboard = () => {
     const [showGoalModal, setShowGoalModal] = useState(false); // For editing hydration goal
     const [showWorkoutGoalModal, setShowWorkoutGoalModal] = useState(false); // For editing workout goal
     const [showInfoModal, setShowInfoModal] = useState(false); // For "How it works"
+    const [showOnboarding, setShowOnboarding] = useState(false); // For first-time users
     const { addXP, calculateLevel } = useGamification();
     const navigate = useNavigate();
 
@@ -79,6 +81,11 @@ const Dashboard = () => {
                 setUserData(doc.data());
                 if (doc.data().hydrationGoal) setHydrationGoal(doc.data().hydrationGoal);
                 if (doc.data().workoutGoal) setWorkoutGoal(doc.data().workoutGoal);
+
+                // Check if onboarding needed
+                if (!doc.data().onboardingCompleted) {
+                    setShowOnboarding(true);
+                }
             }
             setLoading(false);
         });
@@ -409,6 +416,11 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Onboarding Modal */}
+            {showOnboarding && (
+                <OnboardingModal onComplete={() => setShowOnboarding(false)} />
             )}
         </div>
     );
