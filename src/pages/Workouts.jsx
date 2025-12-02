@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { Dumbbell, Footprints, Flower, Bike, Swords, Flame, Plus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Dumbbell, Footprints, Flower, Bike, Swords, Flame, Plus, Timer, BarChart3 } from 'lucide-react';
 import LogWorkoutModal from '../components/LogWorkoutModal';
+import { auth, db } from '../firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 const SPORTS = [
     {
@@ -55,17 +57,59 @@ const SPORTS = [
 
 const Workouts = () => {
     const [selectedSport, setSelectedSport] = useState(null);
+    const [userData, setUserData] = useState(null);
+
+    useEffect(() => {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (doc) => {
+            if (doc.exists()) {
+                setUserData(doc.data());
+            }
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     return (
         <div className="min-h-screen pb-32 pt-10 px-6 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
             {/* Header */}
-            <div className="mb-8 text-center">
-                <h1 className="text-3xl font-black text-gray-900 dark:text-white italic tracking-tighter mb-2">
-                    REGISTRAR TREINO
-                </h1>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                    Selecione a atividade que você realizou hoje
-                </p>
+            <div className="mb-8">
+                <div className="text-center mb-6">
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-white italic tracking-tighter mb-2">
+                        REGISTRAR TREINO
+                    </h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                        Selecione a atividade que você realizou hoje
+                    </p>
+                </div>
+
+                <div className="flex justify-between items-center bg-white dark:bg-gray-900 rounded-[2rem] p-8 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)]">
+                    <div className="text-center flex-1">
+                        <div className="flex justify-center mb-3 text-orange-500">
+                            <Flame size={28} strokeWidth={2.5} />
+                        </div>
+                        <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest mb-1">CALORIES</p>
+                        <p className="text-gray-900 dark:text-white font-black text-xl">{userData?.caloriesBurnedToday || 0} <span className="text-xs font-bold text-gray-400">cal</span></p>
+                    </div>
+                    <div className="w-px h-12 bg-gray-100 dark:bg-gray-800"></div>
+                    <div className="text-center flex-1">
+                        <div className="flex justify-center mb-3 text-blue-500">
+                            <Timer size={28} strokeWidth={2.5} />
+                        </div>
+                        <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest mb-1">WORKOUTS</p>
+                        <p className="text-gray-900 dark:text-white font-black text-xl">{userData?.workoutsCompleted || 0} <span className="text-xs font-bold text-gray-400">treinos</span></p>
+                    </div>
+                    <div className="w-px h-12 bg-gray-100 dark:bg-gray-800"></div>
+                    <div className="text-center flex-1">
+                        <div className="flex justify-center mb-3 text-purple-500">
+                            <BarChart3 size={28} strokeWidth={2.5} />
+                        </div>
+                        <p className="text-gray-400 text-[10px] uppercase font-bold tracking-widest mb-1">LEVEL</p>
+                        <p className="text-gray-900 dark:text-white font-black text-xl">{userData?.level || 1}</p>
+                    </div>
+                </div>
             </div>
 
             {/* Bento Grid */}
