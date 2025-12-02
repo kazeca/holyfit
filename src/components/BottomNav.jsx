@@ -4,13 +4,11 @@ import { Home, Dumbbell, Trophy, User, Plus } from 'lucide-react';
 import ActionMenu from './ActionMenu';
 import NewWorkoutModal from './NewWorkoutModal';
 import MealModal from './MealModal';
-import HydrationModal from './HydrationModal';
 
 const BottomNav = () => {
     const [showActionMenu, setShowActionMenu] = useState(false);
     const [showWorkoutModal, setShowWorkoutModal] = useState(false);
     const [showMealModal, setShowMealModal] = useState(false);
-    const [showHydrationModal, setShowHydrationModal] = useState(false);
 
     const navItems = [
         { path: '/', icon: Home, label: 'Home' },
@@ -28,7 +26,8 @@ const BottomNav = () => {
                 setShowMealModal(true);
                 break;
             case 'water':
-                setShowHydrationModal(true);
+                // Water modal não implementado ainda - usar dashboard
+                alert('Use o dashboard para adicionar água!');
                 break;
             default:
                 break;
@@ -113,13 +112,6 @@ const BottomNav = () => {
             {showMealModal && (
                 <MealModal
                     onClose={() => setShowMealModal(false)}
-                    onSaveSuccess={handleModalSuccess}
-                />
-            )}
-
-            {showHydrationModal && (
-                <HydrationModal
-                    onClose={() => setShowHydrationModal(false)}
                     onSaveSuccess={handleModalSuccess}
                 />
             )}
