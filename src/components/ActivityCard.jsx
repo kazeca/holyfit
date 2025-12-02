@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dumbbell, Footprints, Flower, Bike, Swords, Flame, Clock, MapPin, Zap, Waves } from 'lucide-react';
+import { Dumbbell, Footprints, Flower, Bike, Swords, Flame, Clock, MapPin, Zap, Waves, Trash2 } from 'lucide-react';
 
 const ICONS = {
     gym: Dumbbell,
@@ -21,12 +21,12 @@ const COLORS = {
     swim: 'text-sky-500 bg-sky-500/10'
 };
 
-const ActivityCard = ({ workout }) => {
+const ActivityCard = ({ workout, onDelete }) => {
     const Icon = ICONS[workout.sportId] || Flame;
     const colorClass = COLORS[workout.sportId] || 'text-gray-500 bg-gray-500/10';
 
     return (
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-sm hover:bg-white/10 transition-colors group">
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-sm hover:bg-white/10 transition-colors group relative">
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClass}`}>
@@ -40,10 +40,21 @@ const ActivityCard = ({ workout }) => {
                         </p>
                     </div>
                 </div>
-                <div className="bg-white/5 px-2 py-1 rounded-lg">
-                    <span className="text-xs font-bold text-neon-purple">
-                        {workout.calories} kcal
-                    </span>
+                <div className="flex items-center gap-3">
+                    <div className="bg-white/5 px-2 py-1 rounded-lg">
+                        <span className="text-xs font-bold text-neon-purple">
+                            {workout.calories} kcal
+                        </span>
+                    </div>
+                    {onDelete && (
+                        <button
+                            onClick={() => onDelete(workout)}
+                            className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
+                            title="Excluir treino"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    )}
                 </div>
             </div>
 

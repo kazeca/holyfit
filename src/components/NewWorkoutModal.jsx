@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, ChevronLeft, Clock, Zap, MapPin, Flame, Save, Dumbbell, Footprints, Flower, Bike, Swords, Waves } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { collection, addDoc, updateDoc, doc, increment, serverTimestamp } from 'firebase/firestore';
+import confetti from 'canvas-confetti';
 
 const SPORTS = [
     {
@@ -147,6 +148,15 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
             });
 
             onSaveSuccess();
+
+            // Trigger Confetti
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#A855F7', '#EC4899', '#3B82F6'] // Neon Purple, Pink, Blue
+            });
+
             onClose();
         } catch (error) {
             console.error("Error logging workout:", error);

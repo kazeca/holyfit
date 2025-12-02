@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Flame, Timer, BarChart3 } from 'lucide-react';
 import { auth, db } from '../firebase';
-import { doc, onSnapshot, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, orderBy, getDocs, deleteDoc, updateDoc, increment } from 'firebase/firestore';
 import { startOfDay, endOfDay } from 'date-fns';
 import WeekCalendar from '../components/WeekCalendar';
 import ActivityCard from '../components/ActivityCard';
@@ -56,6 +56,30 @@ const Workouts = () => {
         fetchWorkouts(selectedDate);
     }, [selectedDate]);
 
+    const handleDeleteWorkout = async (workout) => {
+        if (!window.confirm("Tem certeza que deseja excluir este treino?")) return;
+        if (!auth.currentUser) return;
+
+        try {
+            // 1. Delete workout doc
+            await deleteDoc(doc(db, 'workouts', workout.id));
+
+            // 2. Revert user stats
+            const userRef = doc(db, 'users', auth.currentUser.uid);
+            await updateDoc(userRef, {
+                totalPoints: increment(-workout.calories),
+                caloriesBurnedToday: increment(-workout.calories),
+                workoutsCompleted: increment(-1)
+            });
+
+            // 3. Refresh list
+            fetchWorkouts(selectedDate);
+        } catch (error) {
+            console.error("Error deleting workout:", error);
+            alert("Erro ao excluir treino.");
+        }
+    };
+
     return (
         <div className="min-h-screen pb-32 pt-6 bg-gray-950 transition-colors duration-300">
 
@@ -108,7 +132,11 @@ const Workouts = () => {
                 ) : dailyWorkouts.length > 0 ? (
                     <div className="space-y-3 pb-24">
                         {dailyWorkouts.map(workout => (
-                            <ActivityCard key={workout.id} workout={workout} />
+                            <ActivityCard
+                                key={workout.id}
+                                workout={workout}
+                                onDelete={handleDeleteWorkout}
+                            />
                         ))}
                     </div>
                 ) : (
