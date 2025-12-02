@@ -29,19 +29,10 @@ const Workouts = () => {
         if (!auth.currentUser) return;
         setLoadingWorkouts(true);
         try {
-            const start = startOfDay(date).toISOString();
-            const end = endOfDay(date).toISOString();
-
-            // Note: Ideally we should filter by date in Firestore, but for simplicity/MVP 
-            // and avoiding complex index creation errors, we'll fetch recent and filter client-side 
-            // or use a simple query if possible. 
-            // Let's try filtering by userId and sorting by date, then filtering client side for the specific day
-            // to avoid composite index issues for now.
-
+            // Removed orderBy to avoid missing index error. Sorting client-side.
             const q = query(
                 collection(db, 'workouts'),
-                where('userId', '==', auth.currentUser.uid),
-                orderBy('date', 'desc')
+                where('userId', '==', auth.currentUser.uid)
             );
 
             const snapshot = await getDocs(q);
@@ -50,7 +41,8 @@ const Workouts = () => {
                 .filter(w => {
                     const wDate = new Date(w.date);
                     return wDate >= startOfDay(date) && wDate <= endOfDay(date);
-                });
+                })
+                .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort desc
 
             setDailyWorkouts(workouts);
         } catch (error) {
