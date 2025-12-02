@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '../firebase';
 import { doc, onSnapshot, updateDoc, increment } from 'firebase/firestore';
-import { Activity, Droplets, Flame, Zap, Plus, X, Settings, HelpCircle, Crown, Lightbulb } from 'lucide-react';
+import { Activity, Droplets, Flame, Zap, Plus, X, Settings, HelpCircle, Crown, Lightbulb, Camera } from 'lucide-react';
 import { useGamification } from '../hooks/useGamification';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import OnboardingModal from '../components/OnboardingModal';
+import ChallengePhotoCapture from '../components/ChallengePhotoCapture';
 
 const Dashboard = () => {
     const [userData, setUserData] = useState(null);
@@ -15,6 +16,8 @@ const Dashboard = () => {
     const [showWorkoutGoalModal, setShowWorkoutGoalModal] = useState(false); // For editing workout goal
     const [showInfoModal, setShowInfoModal] = useState(false); // For "How it works"
     const [showOnboarding, setShowOnboarding] = useState(false); // For first-time users
+    const [showPhotoCapture, setShowPhotoCapture] = useState(false); // For challenge photo capture
+    const [challengeCompleted, setChallengeCompleted] = useState(false); // Track if challenge completed today
     const { addXP, calculateLevel } = useGamification();
     const navigate = useNavigate();
 
@@ -49,27 +52,17 @@ const Dashboard = () => {
         return tips[dayOfYear % tips.length];
     };
 
-    const [showChallengeAccepted, setShowChallengeAccepted] = useState(false);
+    const handleOpenPhotoCapture = () => {
+        setShowPhotoCapture(true);
+    };
 
-    const handleAcceptChallenge = async () => {
-        if (!auth.currentUser) return;
-        try {
-            await addXP(getDailyChallenge().reward, 'challenge');
-            setShowChallengeAccepted(true);
+    const handleChallengeComplete = () => {
+        setShowPhotoCapture(false);
+        setChallengeCompleted(true);
+    };
 
-            // Confetti
-            if (typeof confetti !== 'undefined') {
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
-            }
-
-            setTimeout(() => setShowChallengeAccepted(false), 3000);
-        } catch (error) {
-            console.error("Error accepting challenge:", error);
-        }
+    const handlePhotoCaptureCancel = () => {
+        setShowPhotoCapture(false);
     };
 
     useEffect(() => {
@@ -85,6 +78,15 @@ const Dashboard = () => {
                 // Check if onboarding needed
                 if (!doc.data().onboardingCompleted) {
                     setShowOnboarding(true);
+                }
+
+                // Check if challenge completed today
+                const lastChallengeDate = doc.data().lastChallengeDate;
+                const today = new Date().toDateString();
+                if (lastChallengeDate === today) {
+                    setChallengeCompleted(true);
+                } else {
+                    setChallengeCompleted(false);
                 }
             }
             setLoading(false);
@@ -269,18 +271,19 @@ const Dashboard = () => {
                         </span>
                     </div>
 
-                    {!showChallengeAccepted ? (
-                        <button
-                            onClick={handleAcceptChallenge}
-                            className="relative z-10 bg-white text-purple-600 px-6 py-3 rounded-full font-black text-sm hover:scale-105 active:scale-95 transition-transform shadow-lg"
-                            aria-label="Aceitar desafio"
-                        >
-                            Aceitar Desafio
-                        </button>
-                    ) : (
+                    {challengeCompleted ? (
                         <div className="relative z-10 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full font-black text-sm text-center">
-                            ✅ Concluído! +{getDailyChallenge().reward} XP
+                            ✅ Concluído! Volte amanhã 🔥
                         </div>
+                    ) : (
+                        <button
+                            onClick={handleOpenPhotoCapture}
+                            className="relative z-10 bg-white text-purple-600 px-6 py-3 rounded-full font-black text-sm hover:scale-105 active:scale-95 transition-transform shadow-lg flex items-center justify-center gap-2"
+                            aria-label="Comprovar com foto"
+                        >
+                            <Camera size={18} />
+                            Comprovar com Foto
+                        </button>
                     )}
                 </div>
 
@@ -421,6 +424,16 @@ const Dashboard = () => {
             {/* Onboarding Modal */}
             {showOnboarding && (
                 <OnboardingModal onComplete={() => setShowOnboarding(false)} />
+            )}
+
+            {/* Challenge Photo Capture Modal */}
+            {showPhotoCapture && (
+                <ChallengePhotoCapture
+                    challenge={getDailyChallenge()}
+                    userLevel={currentLevel}
+                    onComplete={handleChallengeComplete}
+                    onCancel={handlePhotoCaptureCancel}
+                />
             )}
         </div>
     );
