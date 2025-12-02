@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import OnboardingModal from '../components/OnboardingModal';
 import PhotoProofModal from '../components/PhotoProofModal';
+import NutritionCard from '../components/NutritionCard';
 
 const Dashboard = () => {
     const [userData, setUserData] = useState(null);

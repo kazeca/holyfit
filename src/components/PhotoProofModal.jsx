@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Camera, X, Check, RotateCcw, Loader2 } from 'lucide-react';
 import { validateChallengePhoto } from '../utils/challengeValidation';
 import { completeChallengeWithPhoto } from '../utils/challengeService';
+import { completeMealWithPhoto } from '../utils/mealService';
 import confetti from 'canvas-confetti';
 import { auth } from '../firebase';
 
@@ -23,7 +24,20 @@ const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete
                 instruction: 'Tire uma foto do seu treino para comprovar!',
                 hint: '📸 Mostre você na academia ou fazendo exercício',
                 successTitle: 'Treino Registrado!',
-                gradient: 'from-orange-500 to-red-600'
+                gradient: 'from-orange-500 to-red-600',
+                confettiColors: ['#FF6B35', '#F7931E', '#FDCA40']
+            };
+        }
+        if (actionType === 'meal') {
+            return {
+                title: 'Fotografar Prato',
+                description: `${data.mealType} - ${data.totalCalories} kcal`,
+                xp: Math.round(data.totalCalories / 10), // 10 calorias = 1 XP
+                instruction: 'Tire uma foto do seu prato!',
+                hint: '📸 Mostre todos os alimentos da refeição',
+                successTitle: 'Refeição Registrada!',
+                gradient: 'from-green-600 to-emerald-600',
+                confettiColors: ['#10B981', '#34D399', '#6EE7B7']
             };
         }
         // Default: challenge
@@ -34,7 +48,8 @@ const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete
             instruction: 'Tire uma foto comprovando que você completou o desafio!',
             hint: '📸 A foto será enviada para o feed',
             successTitle: 'Desafio Completado!',
-            gradient: 'from-purple-600 to-pink-600'
+            gradient: 'from-purple-600 to-pink-600',
+            confettiColors: ['#A855F7', '#EC4899', '#F472B6']
         };
     };
 
@@ -92,9 +107,13 @@ const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete
 
             // Complete action based on type
             if (actionType === 'workout') {
-                // Will implement workout completion service
                 const { completeWorkoutWithPhoto } = await import('../utils/challengeService');
                 await completeWorkoutWithPhoto(selectedFile, {
+                    ...data,
+                    userLevel
+                }, validation.photoHash);
+            } else if (actionType === 'meal') {
+                await completeMealWithPhoto(selectedFile, {
                     ...data,
                     userLevel
                 }, validation.photoHash);
