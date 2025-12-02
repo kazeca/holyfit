@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { X, ChevronLeft, Clock, Zap, MapPin, Flame, Save, Dumbbell, Footprints, Flower, Bike, Swords, Waves } from 'lucide-react';
-import { db, auth } from '../firebase';
-import { collection, addDoc, updateDoc, doc, increment, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
-import confetti from 'canvas-confetti';
+import { X, ChevronLeft, Clock, Zap, MapPin, Flame, Camera, Dumbbell, Footprints, Flower, Bike, Swords, Waves } from 'lucide-react';
+import { useGamification } from '../hooks/useGamification';
+import PhotoProofModal from './PhotoProofModal';
 
 const SPORTS = [
     {
@@ -62,7 +61,8 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
     const [duration, setDuration] = useState(30);
     const [intensity, setIntensity] = useState('medium');
     const [distance, setDistance] = useState('');
-    const [loading, setLoading] = useState(false);
+    const [showPhotoModal, setShowPhotoModal] = useState(false);
+    const { calculateLevel } = useGamification();
 
     const handleSportSelect = (sport) => {
         setSelectedSport(sport);
@@ -109,91 +109,19 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
 
     const calories = calculateCalories();
 
-    const handleSave = async () => {
-        if (!auth.currentUser) {
-            alert("Erro: Usuário não autenticado. Tente fazer login novamente.");
-            return;
-        }
-        if (!selectedSport) return;
+    const handleRegisterWorkout = () => {
+        // Open photo modal
+        setShowPhotoModal(true);
+    };
 
-        setLoading(true);
+    const handlePhotoComplete = () => {
+        setShowPhotoModal(false);
+        onSaveSuccess();
+        onClose();
+    };
 
-        try {
-            // 0. Check for Personal Record (PR)
-            let isPR = false;
-            try {
-                const q = query(
-                    collection(db, 'workouts'),
-                    where('userId', '==', auth.currentUser.uid),
-                    where('sportId', '==', selectedSport.id)
-                );
-                const snapshot = await getDocs(q);
-                const previousWorkouts = snapshot.docs.map(doc => doc.data());
-
-                if (distance && Number(distance) > 0 && (selectedSport.id === 'run' || selectedSport.id === 'bike')) {
-                    const maxDistance = Math.max(...previousWorkouts.map(w => w.distance || 0));
-                    isPR = Number(distance) > maxDistance;
-                } else {
-                    const maxCalories = Math.max(...previousWorkouts.map(w => w.calories || 0));
-                    isPR = calories > maxCalories;
-                }
-            } catch (error) {
-                console.warn("Could not check for PR:", error);
-            }
-
-            // 1. Save to 'workouts' collection
-            await addDoc(collection(db, 'workouts'), {
-                userId: auth.currentUser.uid,
-                sportId: selectedSport.id,
-                sportName: selectedSport.name,
-                duration: Number(duration),
-                intensity,
-                distance: distance ? Number(distance) : null,
-                calories,
-                isPR,
-                timestamp: serverTimestamp(),
-                date: new Date().toISOString()
-            });
-
-            // 2. Update user stats
-            const userRef = doc(db, 'users', auth.currentUser.uid);
-
-            // Use setDoc with merge to ensure it works even if doc is missing (defensive)
-            // But we need to import setDoc first. For now, let's stick to updateDoc but catch its specific error
-            // Or better, just try updateDoc and if it fails, maybe the user doc doesn't exist?
-            // Actually, let's just alert if it fails.
-
-            const bonusXP = isPR ? 100 : 0;
-            await updateDoc(userRef, {
-                totalPoints: increment(calories + bonusXP),
-                caloriesBurnedToday: increment(calories),
-                workoutsCompleted: increment(1),
-                lastWorkoutDate: new Date().toISOString().split('T')[0]
-            });
-
-            onSaveSuccess();
-
-            // Trigger Confetti
-            confetti({
-                particleCount: isPR ? 250 : 150,
-                spread: isPR ? 90 : 70,
-                origin: { y: 0.6 },
-                colors: isPR ? ['#FFD700', '#FFA500', '#FF4500'] : ['#A855F7', '#EC4899', '#3B82F6']
-            });
-
-            if (isPR) {
-                setTimeout(() => {
-                    alert(`🏆 NOVO RECORDE PESSOAL!\n+${bonusXP} XP Bônus`);
-                }, 500);
-            }
-
-            onClose();
-        } catch (error) {
-            console.error("Error logging workout:", error);
-            alert(`Erro ao salvar treino: ${error.message}`);
-        } finally {
-            setLoading(false);
-        }
+    const handlePhotoCancel = () => {
+        setShowPhotoModal(false);
     };
 
     return (
@@ -311,12 +239,30 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
                         </div>
 
                         <button
-                            onClick={handleSave}
-                            disabled={loading}
-                            className="w-full py-5 bg-gradient-to-r from-neon-purple to-fuchsia-600 text-white rounded-2xl font-black text-lg shadow-[0_10px_40px_-10px_rgba(168,85,247,0.5)] active:scale-95 transition-transform disabled:opacity-50 flex items-center justify-center gap-3"
+                            onClick={handleRegisterWorkout}
+                            className="w-full py-5 bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-2xl font-black text-lg shadow-[0_10px_40px_-10px_rgba(168,85,247,0.5)] active:scale-95 transition-transform flex items-center justify-center gap-3"
                         >
-                            {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <><Save size={20} /> REGISTRAR TREINO</>}
+                            <Camera size={20} /> REGISTRAR TREINO
                         </button>
+
+                        {/* Photo Proof Modal */}
+                        {showPhotoModal && (
+                            <PhotoProofModal
+                                actionType="workout"
+                                data={{
+                                    workoutName: selectedSport.name,
+                                    duration,
+                                    intensity,
+                                    distance,
+                                    xp: calories,
+                                    exercises: []
+                                }}
+                                userLevel={calculateLevel(0)}
+                                onComplete={handlePhotoComplete}
+                                onCancel={handlePhotoCancel}
+                                autoOpenCamera={true}
+                            />
+                        )}
                     </div>
                 )}
             </div>
