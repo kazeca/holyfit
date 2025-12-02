@@ -9,6 +9,18 @@ const Leaderboard = () => {
     const [activeTab, setActiveTab] = useState('ranking');
     const [feed, setFeed] = useState([]);
 
+    // Helper function to format timestamps
+    const formatTimeAgo = (date) => {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return 'agora mesmo';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} min atrás`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h atrás`;
+        const days = Math.floor(hours / 24);
+        return `${days}d atrás`;
+    };
+
     useEffect(() => {
         const fetchLeaderboard = async () => {
             try {
@@ -25,18 +37,43 @@ const Leaderboard = () => {
 
         const fetchFeed = async () => {
             try {
-                // In a real app, we would have a 'feed' collection or a composite index on workouts
-                // For MVP, we'll just mock it or try to fetch recent workouts if index exists
-                // Let's mock for stability and speed as per user request for "MVP"
-                const mockFeed = [
-                    { id: 1, user: 'Alice', action: 'completou', target: 'Treino de Pernas', time: '2 min atrás', avatar: 'https://ui-avatars.com/api/?name=Alice' },
-                    { id: 2, user: 'Bob', action: 'subiu para', target: 'Nível 5', time: '15 min atrás', avatar: 'https://ui-avatars.com/api/?name=Bob' },
-                    { id: 3, user: 'Charlie', action: 'bebeu', target: '500ml de água', time: '1 hora atrás', avatar: 'https://ui-avatars.com/api/?name=Charlie' },
-                    { id: 4, user: 'Diana', action: 'ganhou a medalha', target: 'Fogo Puro', time: '2 horas atrás', avatar: 'https://ui-avatars.com/api/?name=Diana' },
-                ];
-                setFeed(mockFeed);
+                // Fetch recent workouts from all users
+                const q = query(
+                    collection(db, 'workouts'),
+                    orderBy('timestamp', 'desc'),
+                    limit(20)
+                );
+                const querySnapshot = await getDocs(q);
+
+                // Fetch user data for each workout
+                const feedPromises = querySnapshot.docs.map(async (workoutDoc) => {
+                    const workout = { id: workoutDoc.id, ...workoutDoc.data() };
+                    try {
+                        const userDoc = await getDocs(query(collection(db, 'users'), limit(1)));
+                        const userData = userDoc.docs.find(doc => doc.id === workout.userId);
+                        return {
+                            id: workout.id,
+                            userId: workout.userId,
+                            userName: userData?.data()?.displayName || 'Atleta',
+                            userLevel: userData?.data()?.level || 1,
+                            userPhoto: userData?.data()?.photoURL,
+                            sportName: workout.sportName,
+                            calories: workout.calories,
+                            duration: workout.duration,
+                            distance: workout.distance,
+                            timestamp: workout.timestamp,
+                            date: workout.date
+                        };
+                    } catch {
+                        return null;
+                    }
+                });
+
+                const feedData = (await Promise.all(feedPromises)).filter(Boolean);
+                setFeed(feedData);
             } catch (error) {
                 console.error("Error fetching feed:", error);
+                setFeed([]); // Empty state on error
             }
         };
 
@@ -173,17 +210,55 @@ const Leaderboard = () => {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {feed.map((item) => (
-                        <div key={item.id} className="bg-white dark:bg-gray-900 p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 dark:border-gray-800 animate-in fade-in slide-in-from-bottom-4">
-                            <img src={item.avatar} alt={item.user} className="w-10 h-10 rounded-full object-cover" />
-                            <div className="flex-1">
-                                <p className="text-sm text-gray-900 dark:text-white">
-                                    <span className="font-bold">{item.user}</span> {item.action} <span className="font-bold text-blue-500">{item.target}</span>
-                                </p>
-                                <p className="text-xs text-gray-400 mt-1">{item.time}</p>
-                            </div>
+                    {feed.length === 0 ? (
+                        <div className="text-center py-12 bg-white/5 rounded-3xl border border-white/5 border-dashed">
+                            <p className="text-gray-500 font-medium mb-2">Nenhuma atividade recente.</p>
+                            <p className="text-sm text-gray-600">Seja o primeiro a compartilhar!</p>
                         </div>
-                    ))}
+                    ) : (
+                        feed.map((post) => {
+                            const timeAgo = post.timestamp?.toDate
+                                ? formatTimeAgo(post.timestamp.toDate())
+                                : 'agora mesmo';
+
+                            return (
+                                <div key={post.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 shadow-sm hover:bg-white/10 transition-colors">
+                                    {/* Header */}
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-700">
+                                            <img
+                                                src={post.userPhoto || `https://ui-avatars.com/api/?name=${post.userName}`}
+                                                alt={post.userName}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-white text-sm">{post.userName}</h3>
+                                            <p className="text-xs text-gray-400">Lvl {post.userLevel} • {timeAgo}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="bg-white/5 border border-white/5 rounded-xl p-3">
+                                        <p className="text-white font-bold text-sm mb-2">🏃 {post.sportName}</p>
+                                        <div className="flex items-center gap-3 text-xs text-gray-300">
+                                            <span className="flex items-center gap-1">
+                                                🔥 {post.calories} kcal
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                ⏱️ {post.duration} min
+                                            </span>
+                                            {post.distance && (
+                                                <span className="flex items-center gap-1">
+                                                    📍 {post.distance} km
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    )}
                 </div>
             )}
         </div>

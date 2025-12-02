@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '../firebase';
 import { doc, onSnapshot, updateDoc, increment } from 'firebase/firestore';
-import { Activity, Droplets, Flame, Zap, Plus, X, Settings, HelpCircle, Crown } from 'lucide-react';
+import { Activity, Droplets, Flame, Zap, Plus, X, Settings, HelpCircle, Crown, Lightbulb } from 'lucide-react';
 import { useGamification } from '../hooks/useGamification';
 import { useNavigate } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 
 const Dashboard = () => {
     const [userData, setUserData] = useState(null);
@@ -18,6 +19,56 @@ const Dashboard = () => {
     // Local state for goals (could be in Firestore)
     const [hydrationGoal, setHydrationGoal] = useState(2000);
     const [workoutGoal, setWorkoutGoal] = useState(5);
+
+    // Daily rotating content
+    const challenges = [
+        { id: 1, title: '⚡ Desafio Relâmpago', task: 'Faça 20 agachamentos agora!', reward: 50 },
+        { id: 2, title: '🔥 Queima Rápida', task: 'Corra 1km sem parar!', reward: 100 },
+        { id: 3, title: '💪 Força Total', task: 'Faça 15 flexões perfeitas!', reward: 75 },
+        { id: 4, title: '🧘 Equilíbrio', task: 'Prancha por 60 segundos!', reward: 60 },
+        { id: 5, title: '🏃 Sprint Challenge', task: 'Burpees x 10 repetições!', reward: 80 }
+    ];
+
+    const tips = [
+        'Beber 500ml de água logo ao acordar acelera o metabolismo.',
+        'Descanso é tão importante quanto treino. Durma 7-8h por noite.',
+        'Proteínas pós-treino ajudam na recuperação muscular.',
+        'Alongue-se por 5 minutos antes de dormir.',
+        'Evite carboidratos simples antes de treinar.'
+    ];
+
+    const getDailyChallenge = () => {
+        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+        return challenges[dayOfYear % challenges.length];
+    };
+
+    const getDailyTip = () => {
+        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+        return tips[dayOfYear % tips.length];
+    };
+
+    const [showChallengeAccepted, setShowChallengeAccepted] = useState(false);
+
+    const handleAcceptChallenge = async () => {
+        if (!auth.currentUser) return;
+        try {
+            await addXP(getDailyChallenge().reward, 'challenge');
+            setShowChallengeAccepted(true);
+
+            // Confetti
+            if (typeof confetti !== 'undefined') {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            setTimeout(() => setShowChallengeAccepted(false), 3000);
+        } catch (error) {
+            console.error("Error accepting challenge:", error);
+        }
+    };
 
     useEffect(() => {
         const user = auth.currentUser;
@@ -195,27 +246,56 @@ const Dashboard = () => {
                     </div>
                 </div>
 
-                {/* Desafio Diário (Dark) */}
-                <div className="col-span-2 bg-[#1C1C1E] rounded-[2.5rem] p-6 text-white shadow-2xl relative overflow-hidden h-48 flex flex-col justify-end group">
-                    <img src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80" alt="Workout" className="absolute top-0 right-0 w-3/5 h-full object-cover opacity-60 mask-image-gradient" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"></div>
 
-                    <div className="relative z-10 mb-2">
-                        <div className="flex items-center gap-3 mb-4">
-                            <span className="flex items-center gap-1 text-xs font-medium text-gray-400 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
-                                <ClockIcon size={12} /> {userData?.workoutsCompleted || 0} treinos
-                            </span>
-                            <span className="flex items-center gap-1 text-xs font-medium text-gray-400 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-sm">
-                                <Flame size={12} /> {userData?.caloriesBurnedToday || 0}kcal
-                            </span>
-                        </div>
-                        <h3 className="text-2xl font-bold leading-tight mb-1">Hoje</h3>
-                        <p className="text-gray-400 text-sm">Resumo da Atividade</p>
+                {/* Desafio Relâmpago (Challenge Card) */}
+                <div className="col-span-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-[2.5rem] p-6 text-white shadow-[0_20px_50px_rgba(168,85,247,0.5)] relative overflow-hidden h-52 flex flex-col justify-between">
+                    {/* Background icon */}
+                    <div className="absolute -right-4 -top-4 opacity-20">
+                        <Zap size={120} fill="white" />
                     </div>
 
-                    <button className="absolute bottom-6 right-6 w-12 h-12 bg-orange-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-500/30 group-hover:scale-110 transition-transform">
-                        <Plus size={24} />
-                    </button>
+                    <div className="relative z-10">
+                        <h3 className="text-lg font-black mb-2">{getDailyChallenge().title}</h3>
+                        <p className="text-white/90 text-sm font-medium mb-3">{getDailyChallenge().task}</p>
+                        <span className="inline-block bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-black">
+                            +{getDailyChallenge().reward} XP
+                        </span>
+                    </div>
+
+                    {!showChallengeAccepted ? (
+                        <button
+                            onClick={handleAcceptChallenge}
+                            className="relative z-10 bg-white text-purple-600 px-6 py-3 rounded-full font-black text-sm hover:scale-105 active:scale-95 transition-transform shadow-lg"
+                            aria-label="Aceitar desafio"
+                        >
+                            Aceitar Desafio
+                        </button>
+                    ) : (
+                        <div className="relative z-10 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full font-black text-sm text-center">
+                            ✅ Concluído! +{getDailyChallenge().reward} XP
+                        </div>
+                    )}
+                </div>
+
+                {/* Dica do Treinador (Tip Card) */}
+                <div className="col-span-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-[2.5rem] p-6 text-white shadow-lg relative overflow-hidden h-52 flex flex-col justify-between">
+                    <div className="absolute -left-2 -top-2 opacity-10">
+                        <Lightbulb size={80} />
+                    </div>
+
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-3">
+                            <Lightbulb size={20} className="text-yellow-400" />
+                            <h3 className="text-sm font-bold text-yellow-400 uppercase tracking-wide">Dica do Dia</h3>
+                        </div>
+                        <p className="text-white/90 font-medium text-base leading-relaxed">
+                            {getDailyTip()}
+                        </p>
+                    </div>
+
+                    <p className="text-gray-400 text-xs relative z-10">
+                        💡 Uma nova dica todo dia!
+                    </p>
                 </div>
             </div>
 

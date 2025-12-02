@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, Clock, Zap, MapPin, Flame, Save, Dumbbell, Footprints, Flower, Bike, Swords, Waves } from 'lucide-react';
 import { db, auth } from '../firebase';
-import { collection, addDoc, updateDoc, doc, increment, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, increment, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import confetti from 'canvas-confetti';
 
 const SPORTS = [
@@ -119,6 +119,28 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
         setLoading(true);
 
         try {
+            // 0. Check for Personal Record (PR)
+            let isPR = false;
+            try {
+                const q = query(
+                    collection(db, 'workouts'),
+                    where('userId', '==', auth.currentUser.uid),
+                    where('sportId', '==', selectedSport.id)
+                );
+                const snapshot = await getDocs(q);
+                const previousWorkouts = snapshot.docs.map(doc => doc.data());
+
+                if (distance && Number(distance) > 0 && (selectedSport.id === 'run' || selectedSport.id === 'bike')) {
+                    const maxDistance = Math.max(...previousWorkouts.map(w => w.distance || 0));
+                    isPR = Number(distance) > maxDistance;
+                } else {
+                    const maxCalories = Math.max(...previousWorkouts.map(w => w.calories || 0));
+                    isPR = calories > maxCalories;
+                }
+            } catch (error) {
+                console.warn("Could not check for PR:", error);
+            }
+
             // 1. Save to 'workouts' collection
             await addDoc(collection(db, 'workouts'), {
                 userId: auth.currentUser.uid,
@@ -128,6 +150,7 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
                 intensity,
                 distance: distance ? Number(distance) : null,
                 calories,
+                isPR,
                 timestamp: serverTimestamp(),
                 date: new Date().toISOString()
             });
@@ -140,8 +163,9 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
             // Or better, just try updateDoc and if it fails, maybe the user doc doesn't exist?
             // Actually, let's just alert if it fails.
 
+            const bonusXP = isPR ? 100 : 0;
             await updateDoc(userRef, {
-                totalPoints: increment(calories),
+                totalPoints: increment(calories + bonusXP),
                 caloriesBurnedToday: increment(calories),
                 workoutsCompleted: increment(1),
                 lastWorkoutDate: new Date().toISOString().split('T')[0]
@@ -151,11 +175,17 @@ const NewWorkoutModal = ({ onClose, onSaveSuccess }) => {
 
             // Trigger Confetti
             confetti({
-                particleCount: 150,
-                spread: 70,
+                particleCount: isPR ? 250 : 150,
+                spread: isPR ? 90 : 70,
                 origin: { y: 0.6 },
-                colors: ['#A855F7', '#EC4899', '#3B82F6'] // Neon Purple, Pink, Blue
+                colors: isPR ? ['#FFD700', '#FFA500', '#FF4500'] : ['#A855F7', '#EC4899', '#3B82F6']
             });
+
+            if (isPR) {
+                setTimeout(() => {
+                    alert(`🏆 NOVO RECORDE PESSOAL!\n+${bonusXP} XP Bônus`);
+                }, 500);
+            }
 
             onClose();
         } catch (error) {
