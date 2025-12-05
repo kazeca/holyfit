@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===== HELPER FUNCTIONS =====
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function hasRole(role) {
+      return request.auth.token.role == role;
+    }
+    
+    // Prevent modification of critical fields (XP, level, badges, etc.)
+    function cannotModifyCriticalFields() {
+      let criticalFields = ['xp', 'level', 'totalPoints', 'streak', 
+                            'streakFreezes', 'badges', 'currentTitle', 'activeTitle',
+                            'workoutsCompleted', 'totalMeals', 'challengesCompleted'];
+      return !request.resource.data.diff(resource.data)
+        .affectedKeys()
+        .hasAny(criticalFields);
+    }
+    
+    // ===== USERS COLLECTION =====
+    match /users/{userId} {
+      // Can read own profile
+      allow read: if isAuthenticated() && isOwner(userId);
+      
+      // Can update own profile but NOT critical fields
+      // Critical fields can ONLY be updated by Cloud Functions
+      allow update: if isAuthenticated() 
+                    && isOwner(userId) 
+                    && cannotModifyCriticalFields();
+      
+      // Cannot create or delete users
+      allow create, delete: if false;
+    }
+    
+    // ===== WORKOUT HISTORY =====
+    match /workouts_history/{workoutId} {
+      // Can create own workout (Cloud Function will do this)
+      allow create: if isAuthenticated() 
+                    && isOwner(request.resource.data.userId);
+      
+      // Can read all workouts (public feed)
+      allow read: if isAuthenticated();
+      
+      // History is IMMUTABLE (cannot edit or delete)
+      allow update, delete: if false;
+    }
+    
+    // ===== MEALS HISTORY =====
+    match /meals_history/{mealId} {
+      allow create: if isAuthenticated() 
+                    && isOwner(request.resource.data.userId);
+      allow read: if isAuthenticated();
+      allow update, delete: if false;
+    }
+    
+    // ===== CHALLENGES HISTORY =====
+    match /challenges_history/{challengeId} {
+      allow create: if isAuthenticated() 
+                    && isOwner(request.resource.data.userId);
+      allow read: if isAuthenticated();
+      allow update, delete: if false;
+    }
+    
+    // ===== FEED POSTS =====
+    match /feed_posts/{postId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() 
+                    && isOwner(request.resource.data.userId);
+      allow delete: if isAuthenticated() 
+                    && isOwner(resource.data.userId);
+      allow update: if false; // Posts are immutable
+    }
+    
+    // ===== RANKING (READ-ONLY) =====
+    match /ranking/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only Cloud Function updates
+    }
+    
+    // ===== TRAINING PROGRAMS =====
+    match /training_programs/{programId} {
+      allow read: if isAuthenticated();
+      allow write: if hasRole('admin') || hasRole('personal');
+    }
+    
+    // ===== USER PROGRAM PROGRESS =====
+    match /user_program_progress/{progressId} {
+      allow read: if isAuthenticated() 
+                  && isOwner(resource.data.userId);
+      allow create: if isAuthenticated() 
+                    && isOwner(request.resource.data.userId);
+      allow update: if false; // Only Cloud Function updates
+      allow delete: if false;
+    }
+    
+    // ===== AUDIT LOGS (ADMIN ONLY) =====
+    match /audit_logs/{logId} {
+      allow read: if hasRole('admin');
+      allow write: if false; // Only Cloud Function creates
+    }
+    
+    // ===== ADMIN AREA =====
+    match /admin/{document=**} {
+      allow read, write: if hasRole('admin');
+    }
+    
+    // ===== DENY ALL OTHER PATHS =====
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,60 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper: check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper: check if user owns this file
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // ===== PROOF PHOTOS =====
+    
+    // Workouts
+    match /proofs/workouts/{userId}/{photoId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() 
+                   && isOwner(userId)
+                   && request.resource.size < 10 * 1024 * 1024 // Max 10MB
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if false; // Photos are immutable
+    }
+    
+    // Meals
+    match /proofs/meals/{userId}/{photoId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() 
+                   && isOwner(userId)
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if false;
+    }
+    
+    // Challenges
+    match /proofs/challenges/{userId}/{photoId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() 
+                   && isOwner(userId)
+                   && request.resource.size < 10 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if false;
+    }
+    
+    // User avatars
+    match /avatars/{userId} {
+      allow read: if true; // Public
+      allow write: if isAuthenticated() 
+                   && isOwner(userId)
+                   && request.resource.size < 2 * 1024 * 1024;
+    }
+    
+    // Deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

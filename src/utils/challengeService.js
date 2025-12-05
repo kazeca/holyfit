@@ -209,38 +209,6 @@ export const completeChallengeWithPhoto = async (photoFile, challengeData, photo
     } catch (error) {
         console.error('Error completing challenge:', error);
         throw error;
-    }
-};
-
-/**
- * Complete workout with photo proof
- * Main orchestration function for workouts
- */
-export const completeWorkoutWithPhoto = async (photoFile, workoutData, photoHash) => {
-    const user = auth.currentUser;
-    if (!user) throw new Error('Usuário não autenticado');
-
-    try {
-        // 1. Upload photo
-        const photoURL = await uploadProofPhoto(photoFile, user.uid, 'workouts');
-
-        // 2. Save completion
-        const completionData = {
-            userId: user.uid,
-            userName: user.displayName || 'Usuário',
-            userAvatar: user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}`,
-            workoutName: workoutData.workoutName || 'Treino',
-            exercises: workoutData.exercises || [],
-            duration: workoutData.duration || 0,
-            photoURL,
-            photoHash,
-            xpAwarded: workoutData.xp || 100
-        };
-
-        await saveWorkoutCompletion(completionData);
-
-        // 3. Update user stats
-        await updateUserWorkoutStats(user.uid, completionData.xpAwarded);
 
         // 4. Create feed post
         await createFeedPost('Treino Completado', {
