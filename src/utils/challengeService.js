@@ -209,17 +209,6 @@ export const completeChallengeWithPhoto = async (photoFile, challengeData, photo
     } catch (error) {
         console.error('Error completing challenge:', error);
         throw error;
-
-        // 4. Create feed post
-        await createFeedPost('Treino Completado', {
-            ...completionData,
-            userLevel: workoutData.userLevel || 1,
-            description: `Completou: ${completionData.workoutName}`
-        });
-
-        return { success: true, photoURL };
-    } catch (error) {
-        console.error('Error completing workout:', error);
-        throw error;
     }
 };
+

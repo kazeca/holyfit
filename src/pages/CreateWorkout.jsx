@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash, Save } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { useToast, ToastContainer } from '../components/Toast';
 
 const CreateWorkout = () => {
     const navigate = useNavigate();
@@ -11,6 +12,7 @@ const CreateWorkout = () => {
     const [calories, setCalories] = useState(300);
     const [exercises, setExercises] = useState([{ name: '', sets: 3, reps: 12 }]);
     const [loading, setLoading] = useState(false);
+    const { toasts, removeToast, success, error } = useToast();
 
     const addExercise = () => {
         setExercises([...exercises, { name: '', sets: 3, reps: 12 }]);
@@ -39,9 +41,11 @@ const CreateWorkout = () => {
                 imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=600&q=80', // Default image
                 createdAt: serverTimestamp()
             });
-            navigate('/workouts');
+            success('Treino criado com sucesso!');
+            setTimeout(() => navigate('/workouts'), 1000);
         } catch (error) {
             console.error("Error creating workout:", error);
+            error('Erro ao criar treino');
         } finally {
             setLoading(false);
         }
@@ -142,6 +146,8 @@ const CreateWorkout = () => {
                     {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div> : <><Save size={20} /> Criar Treino</>}
                 </button>
             </div>
+
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
         </div>
     );
 };

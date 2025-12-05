@@ -5,6 +5,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Camera, Moon, Sun, Bell, LogOut, Save } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { useToast, ToastContainer } from '../components/Toast';
 
 const Settings = () => {
     const navigate = useNavigate();
@@ -15,7 +16,7 @@ const Settings = () => {
     const [photoURL, setPhotoURL] = useState(user?.photoURL || '');
     const [notifications, setNotifications] = useState(true);
     const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
+    const { toasts, removeToast, success, error } = useToast();
 
     const handleSave = async () => {
         setLoading(true);
@@ -32,10 +33,10 @@ const Settings = () => {
                 photoURL
             });
 
-            setMessage('Perfil atualizado com sucesso!');
+            success('Perfil atualizado com sucesso!');
         } catch (error) {
             console.error("Error updating profile:", error);
-            setMessage('Erro ao atualizar perfil.');
+            error('Erro ao atualizar perfil.');
         } finally {
             setLoading(false);
         }

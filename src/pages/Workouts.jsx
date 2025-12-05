@@ -6,6 +6,7 @@ import { startOfDay, endOfDay } from 'date-fns';
 import WeekCalendar from '../components/WeekCalendar';
 import ActivityCard from '../components/ActivityCard';
 import NewWorkoutModal from '../components/NewWorkoutModal';
+import { useToast, ToastContainer } from '../components/Toast';
 
 const Workouts = () => {
     const [selectedDate, setSelectedDate] = useState(new Date());
@@ -13,6 +14,7 @@ const Workouts = () => {
     const [userData, setUserData] = useState(null);
     const [dailyWorkouts, setDailyWorkouts] = useState([]);
     const [loadingWorkouts, setLoadingWorkouts] = useState(false);
+    const { toasts, removeToast, success, error } = useToast();
 
     // Fetch User Data (Stats)
     useEffect(() => {
@@ -162,6 +164,8 @@ const Workouts = () => {
                     onSaveSuccess={() => fetchWorkouts(selectedDate)}
                 />
             )}
+
+            <ToastContainer toasts={toasts} removeToast={removeToast} />
         </div>
     );
 };

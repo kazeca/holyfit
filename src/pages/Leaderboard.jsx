@@ -7,6 +7,7 @@ const Leaderboard = () => {
     const [leaderboard, setLeaderboard] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('ranking');
+    const [rankingType, setRankingType] = useState('season'); // 'season' or 'alltime'
     const [feed, setFeed] = useState([]);
 
     // Helper function to format timestamps
@@ -24,7 +25,7 @@ const Leaderboard = () => {
     useEffect(() => {
         const fetchLeaderboard = async () => {
             try {
-                const q = query(collection(db, 'users'), orderBy('totalPoints', 'desc'), limit(50));
+                const q = query(collection(db, 'users'), orderBy('seasonPoints', 'desc'), limit(50));
                 const querySnapshot = await getDocs(q);
                 const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 setLeaderboard(users);
@@ -79,7 +80,7 @@ const Leaderboard = () => {
 
         fetchLeaderboard();
         fetchFeed();
-    }, []);
+    }, [rankingType]);
 
     if (loading) {
         return (
@@ -130,7 +131,9 @@ const Leaderboard = () => {
 
                 <div className="text-center mt-2">
                     <h3 className="font-bold text-gray-900 dark:text-white text-sm truncate w-24 mx-auto">{user.displayName?.split(' ')[0]}</h3>
-                    <p className="text-purple-500 font-black text-lg">{user.totalPoints}</p>
+                    <p className="text-purple-500 font-black text-lg">
+                        {rankingType === 'season' ? (user.seasonPoints || 0) : (user.totalPoints || 0)}
+                    </p>
                     <p className="text-[10px] text-gray-400 font-bold uppercase mb-1">XP</p>
                     <span className="bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">
                         Lvl {user.level || 1}
@@ -142,7 +145,29 @@ const Leaderboard = () => {
 
     return (
         <div className="min-h-screen pb-24 pt-10 px-6 bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
-            <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-8 italic tracking-tighter text-center">COMUNIDADE</h1>
+            <h1 className="text-3xl font-black text-gray-900 dark:text-white mb-4 italic tracking-tighter text-center">COMUNIDADE</h1>
+
+            {/* Ranking Type Selection */}
+            <div className="flex gap-2 mb-4 bg-white/5 dark:bg-gray-900/50 p-1 rounded-xl border border-gray-200 dark:border-gray-700">
+                <button
+                    onClick={() => setRankingType('season')}
+                    className={`flex-1 py-3 rounded-lg text-sm font-black transition-all ${rankingType === 'season'
+                            ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg scale-105'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        }`}
+                >
+                    🏆 Temporada
+                </button>
+                <button
+                    onClick={() => setRankingType('alltime')}
+                    className={`flex-1 py-3 rounded-lg text-sm font-black transition-all ${rankingType === 'alltime'
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105'
+                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        }`}
+                >
+                    👑 Geral
+                </button>
+            </div>
 
             {/* Tabs */}
             <div className="flex p-1 bg-gray-200 dark:bg-gray-800 rounded-xl mb-8">
@@ -200,7 +225,7 @@ const Leaderboard = () => {
 
                                 <div className="text-right">
                                     <span className="block text-sm font-black text-gray-900 dark:text-white">
-                                        {user.totalPoints}
+                                        {rankingType === 'season' ? (user.seasonPoints || 0) : (user.totalPoints || 0)}
                                     </span>
                                     <span className="text-[9px] text-gray-400 font-bold uppercase">pts</span>
                                 </div>

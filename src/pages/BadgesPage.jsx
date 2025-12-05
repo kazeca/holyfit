@@ -1,181 +1,215 @@
 import React, { useState, useEffect } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { ArrowLeft, Award } from 'lucide-react';
-import { BADGES, BADGE_CATEGORIES, getRarityGradient } from '../data/badges';
-import { getBadgeProgress, getBadgesForDisplay } from '../utils/badgeChecker';
+import { doc, getDoc } from 'firebase/firestore';
+import { BADGES, BADGE_CATEGORIES } from '../data/badges';
 
-export default function BadgesPage() {
+const BadgesPageEnhanced = () => {
     const navigate = useNavigate();
     const [userData, setUserData] = useState(null);
-    const [selectedCategory, setSelectedCategory] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!auth.currentUser) {
-            navigate('/login');
-            return;
-        }
+        fetchUserData();
+    }, []);
 
-        const unsubscribe = onSnapshot(
-            doc(db, 'users', auth.currentUser.uid),
-            (doc) => {
-                if (doc.exists()) {
-                    setUserData(doc.data());
-                }
-                setLoading(false);
+    const fetchUserData = async () => {
+        if (!auth.currentUser) return;
+
+        try {
+            const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+            if (userDoc.exists()) {
+                setUserData(userDoc.data());
             }
-        );
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+            setLoading(false);
+        }
+    };
 
-        return () => unsubscribe();
-    }, [navigate]);
+    // Função para calcular progresso atual de cada badge
+    const getBadgeCurrentProgress = (badge) => {
+        if (!userData) return 0;
+
+        switch (badge.category) {
+            case BADGE_CATEGORIES.BEGINNER:
+                if (badge.id === 'first_workout') return userData.totalWorkouts || 0;
+                if (badge.id === 'first_level_up') return userData.level || 0;
+                if (badge.id === 'profile_complete') return (userData.displayName && userData.photoURL) ? 1 : 0;
+                return 0;
+
+            case BADGE_CATEGORIES.STREAK:
+                return userData.currentStreak || 0;
+
+            case BADGE_CATEGORIES.WORKOUT:
+                if (badge.id.includes('workouts_')) return userData.totalWorkouts || 0;
+                return 0;
+
+            case BADGE_CATEGORIES.NUTRITION:
+                return 0; // TODO: Implementar
+
+            case BADGE_CATEGORIES.SOCIAL:
+                return 0; // TODO: Implementar
+
+            case BADGE_CATEGORIES.ELITE:
+                if (badge.id.includes('level_')) return userData.level || 0;
+                return 0;
+
+            default:
+                return 0;
+        }
+    };
+
+    // Função para obter requirement
+    function getRequirementForBadge(badge) {
+        if (badge.id === 'first_workout' || badge.id === 'first_meal' || badge.id === 'first_photo') return 1;
+        if (badge.id === 'profile_complete') return 1;
+        if (badge.id === 'first_level_up') return 2;
+        if (badge.id === 'streak_3') return 3;
+        if (badge.id === 'streak_7') return 7;
+        if (badge.id === 'streak_14') return 14;
+        if (badge.id === 'streak_30') return 30;
+        if (badge.id === 'streak_60') return 60;
+        if (badge.id === 'streak_100') return 100;
+        if (badge.id === 'streak_365') return 365;
+        if (badge.id === 'workouts_10') return 10;
+        if (badge.id === 'workouts_50') return 50;
+        if (badge.id === 'workouts_100') return 100;
+        if (badge.id === 'level_20') return 20;
+        if (badge.id === 'level_30') return 30;
+        return 100;
+    }
+
+    const allBadges = BADGES.map(badge => ({
+        ...badge,
+        current: getBadgeCurrentProgress(badge),
+        requirement: getRequirementForBadge(badge)
+    }));
+
+    const rarityColors = {
+        comum: { bg: 'bg-gray-900/20', border: 'border-gray-500', text: 'text-gray-400', glow: 'shadow-gray-500/20' },
+        raro: { bg: 'bg-blue-900/20', border: 'border-blue-500', text: 'text-blue-400', glow: 'shadow-blue-500/30' },
+        épico: { bg: 'bg-purple-900/20', border: 'border-purple-500', text: 'text-purple-400', glow: 'shadow-purple-500/30' },
+        lendário: { bg: 'bg-yellow-900/20', border: 'border-yellow-500', text: 'text-yellow-400', glow: 'shadow-yellow-500/40' },
+        mítico: { bg: 'bg-red-900/20', border: 'border-red-500', text: 'text-red-400', glow: 'shadow-red-500/50' }
+    };
+
+    const getBadgeProgress = (badge) => Math.min((badge.current / badge.requirement) * 100, 100);
+    const isBadgeUnlocked = (badge) => badge.current >= badge.requirement;
+    const unlockedBadges = allBadges.filter(isBadgeUnlocked);
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-                <div className="text-white text-xl">Carregando...</div>
+            <div className="min-h-screen flex items-center justify-center bg-gray-950">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
             </div>
         );
     }
 
-    const userBadges = userData?.badges || [];
-    const progress = getBadgeProgress(userBadges);
-    const badgesToDisplay = getBadgesForDisplay(
-        userBadges,
-        selectedCategory
-    );
-
     return (
-        <div className="min-h-screen bg-gray-950 pb-24">
-            {/* Header */}
-            <div className="sticky top-0 z-10 bg-gray-900/95 backdrop-blur-xl border-b border-white/10 p-6">
-                <div className="flex items-center gap-4 mb-4">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                    >
-                        <ArrowLeft className="text-white" size={24} />
-                    </button>
-                    <div className="flex-1">
-                        <h1 className="text-3xl font-black text-white flex items-center gap-2">
-                            <Award size={32} className="text-yellow-400" />
-                            Minhas Conquistas
-                        </h1>
-                    </div>
-                </div>
-
-                {/* Progress */}
-                <div className="bg-white/5 rounded-2xl p-4">
-                    <div className="flex justify-between items-center mb-2">
-                        <span className="text-white font-bold">
-                            Progresso: {progress.unlocked}/{progress.total}
-                        </span>
-                        <span className="text-yellow-400 font-bold">
-                            {progress.percentage}%
-                        </span>
-                    </div>
-                    <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
-                        <div
-                            className="bg-gradient-to-r from-yellow-500 to-amber-600 h-3 rounded-full transition-all duration-500"
-                            style={{ width: `${progress.percentage}%` }}
-                        />
-                    </div>
+        <div className="min-h-screen pb-32 pt-8 px-6 bg-gray-950 font-sans">
+            <div className="flex items-center gap-4 mb-8">
+                <button
+                    onClick={() => navigate('/')}
+                    className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-white hover:bg-slate-700 transition-colors"
+                >
+                    <ArrowLeft size={20} />
+                </button>
+                <div>
+                    <h1 className="text-3xl font-black text-white">Badges</h1>
+                    <p className="text-slate-400 text-sm">{unlockedBadges.length}/{allBadges.length} desbloqueados</p>
                 </div>
             </div>
 
-            <div className="p-6">
-                {/* Category Filter */}
-                <div className="mb-6 overflow-x-auto">
-                    <div className="flex gap-2 pb-2">
-                        <button
-                            onClick={() => setSelectedCategory(null)}
-                            className={`px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${selectedCategory === null
-                                    ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-white'
-                                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                                }`}
-                        >
-                            Todos ({BADGES.length})
-                        </button>
-                        {Object.values(BADGE_CATEGORIES).map((category) => {
-                            const count = BADGES.filter(b => b.category === category).length;
-                            return (
-                                <button
-                                    key={category}
-                                    onClick={() => setSelectedCategory(category)}
-                                    className={`px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap transition-all ${selectedCategory === category
-                                            ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-white'
-                                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                                        }`}
-                                >
-                                    {category} ({count})
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
+            {/* Badges Grouped by Category */}
+            {Object.entries(BADGE_CATEGORIES).map(([key, categoryName]) => {
+                const categoryBadges = allBadges.filter(badge => badge.category === categoryName);
+                const unlockedInCategory = categoryBadges.filter(isBadgeUnlocked).length;
 
-                {/* Badges Grid */}
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                    {badgesToDisplay.map((badge) => {
-                        const isUnlocked = badge.unlocked;
+                if (categoryBadges.length === 0) return null;
 
-                        return (
-                            <div
-                                key={badge.id}
-                                className={`relative rounded-2xl p-4 text-center transition-all ${isUnlocked
-                                        ? `bg-gradient-to-br ${getRarityGradient(badge.rarity)} shadow-lg hover:scale-105`
-                                        : 'bg-white/5 opacity-40 grayscale'
-                                    }`}
-                            >
-                                {/* Badge Icon */}
-                                <div className={`text-5xl mb-2 ${isUnlocked ? 'animate-bounce' : ''}`}>
-                                    {badge.emoji}
-                                </div>
+                return (
+                    <div key={key} className="mb-8">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-xl font-black text-white">{categoryName}</h2>
+                            <span className="text-sm text-slate-400">{unlockedInCategory}/{categoryBadges.length}</span>
+                        </div>
 
-                                {/* Badge Name */}
-                                <div className="font-bold text-white text-xs mb-1 line-clamp-2">
-                                    {badge.name}
-                                </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            {categoryBadges.map((badge) => {
+                                const isUnlocked = isBadgeUnlocked(badge);
+                                const progress = getBadgeProgress(badge);
+                                const colors = rarityColors[badge.rarity] || rarityColors.comum;
 
-                                {/* XP Bonus (if unlocked) */}
-                                {isUnlocked && (
-                                    <div className="text-xs text-yellow-300 font-bold">
-                                        +{badge.xpBonus} XP
-                                    </div>
-                                )}
-
-                                {/* Lock Icon (if not unlocked) */}
-                                {!isUnlocked && (
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="text-4xl opacity-50">🔒</div>
-                                    </div>
-                                )}
-
-                                {/* Tooltip on hover */}
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded-lg p-2 whitespace-nowrap z-20 shadow-xl">
-                                    {badge.description}
-                                    {isUnlocked && badge.unlockedAt && (
-                                        <div className="text-gray-400 mt-1">
-                                            {new Date(badge.unlockedAt).toLocaleDateString()}
+                                return (
+                                    <div
+                                        key={badge.id}
+                                        className={`relative p-4 rounded-2xl border transition-all ${isUnlocked
+                                            ? `${colors.bg} ${colors.border} shadow-lg ${colors.glow}`
+                                            : 'bg-gray-900/30 border-gray-800 opacity-60'
+                                            }`}
+                                    >
+                                        {/* Badge Icon/Emoji */}
+                                        <div className={`text-4xl mb-2 ${!isUnlocked && 'grayscale'}`}>
+                                            {badge.emoji}
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
 
-                {/* Empty State */}
-                {badgesToDisplay.length === 0 && (
-                    <div className="text-center py-12">
-                        <div className="text-6xl mb-4">🏆</div>
-                        <div className="text-gray-400">
-                            Nenhum badge nesta categoria ainda
+                                        {/* Badge Name */}
+                                        <h3 className={`font-bold text-sm mb-1 ${isUnlocked ? 'text-white' : 'text-gray-500'}`}>
+                                            {badge.name}
+                                        </h3>
+
+                                        {/* Badge Description */}
+                                        <p className={`text-xs mb-2 ${isUnlocked ? 'text-slate-400' : 'text-gray-600'}`}>
+                                            {badge.description}
+                                        </p>
+
+                                        {/* Rarity Badge */}
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className={`text-[10px] font-bold uppercase ${colors.text}`}>
+                                                {badge.rarity}
+                                            </span>
+                                            {badge.xpBonus && (
+                                                <span className="text-[10px] text-yellow-500 font-bold">
+                                                    +{badge.xpBonus} XP
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* Progress Bar (if locked) */}
+                                        {!isUnlocked && (
+                                            <div className="space-y-1">
+                                                <div className="w-full bg-gray-800 rounded-full h-2 overflow-hidden">
+                                                    <div
+                                                        className={`h-full ${colors.bg} ${colors.border} border transition-all`}
+                                                        style={{ width: `${progress}%` }}
+                                                    ></div>
+                                                </div>
+                                                <p className="text-[10px] text-gray-500 text-center">
+                                                    {badge.current}/{badge.requirement}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {/* Unlocked Checkmark */}
+                                        {isUnlocked && (
+                                            <div className="absolute top-2 right-2">
+                                                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                                                    <span className="text-white text-xs">✓</span>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
-                )}
-            </div>
+                );
+            })}
         </div>
     );
-}
+};
+
+export default BadgesPageEnhanced;

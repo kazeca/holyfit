@@ -12,6 +12,13 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 import Settings from './pages/Settings';
 import CreateWorkout from './pages/CreateWorkout';
+import CalculatorsPage from './pages/CalculatorsPage';
+import ProgressPage from './pages/ProgressPage';
+import MissionsPage from './pages/MissionsPage';
+import BadgesPage from './pages/BadgesPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminSeasons from './pages/admin/AdminSeasons';
 
 function App() {
   return (
@@ -66,6 +73,30 @@ function App() {
           <Route path="/profile" element={
             <>
               <Profile />
+              <BottomNav />
+            </>
+          } />
+          <Route path="/calculators" element={
+            <>
+              <CalculatorsPage />
+              <BottomNav />
+            </>
+          } />
+          <Route path="/progress" element={
+            <>
+              <ProgressPage />
+              <BottomNav />
+            </>
+          } />
+          <Route path="/missions" element={
+            <>
+              <MissionsPage />
+              <BottomNav />
+            </>
+          } />
+          <Route path="/badges" element={
+            <>
+              <BadgesPage />
               <BottomNav />
             </>
           } />
