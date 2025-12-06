@@ -11,6 +11,7 @@ import ActivityHeatmap from '../components/ActivityHeatmap';
 import { BADGES } from '../utils/badges';
 import { getRankByLevel } from '../utils/rankUtils';
 import StreakShieldCard from '../components/StreakShieldCard';
+import { ProfileHeaderSkeleton, StatsCardSkeleton, BadgeSkeleton } from '../components/SkeletonLoaders';
 
 const Profile = () => {
     const [userData, setUserData] = useState(null);
@@ -62,8 +63,28 @@ const Profile = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center pb-20">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-neon-purple"></div>
+            <div className="min-h-screen pb-24 pt-6 px-4">
+                <div className="flex items-center justify-between mb-8">
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-white italic tracking-tighter">
+                        PERFIL
+                    </h1>
+                </div>
+
+                {/* Profile Header Skeleton */}
+                <ProfileHeaderSkeleton />
+
+                {/* Stats Cards Skeleton */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <StatsCardSkeleton />
+                    <StatsCardSkeleton />
+                </div>
+
+                {/* Badges Skeleton */}
+                <div className="grid grid-cols-3 gap-3 mb-8">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <BadgeSkeleton key={i} />
+                    ))}
+                </div>
             </div>
         );
     }
