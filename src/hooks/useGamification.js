@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { db, auth } from '../firebase';
 import { doc, updateDoc, increment, addDoc, collection, serverTimestamp, getDoc } from 'firebase/firestore';
+import { getActiveSeason } from '../utils/seasonUtils';
 import confetti from 'canvas-confetti';
 
 export const useGamification = () => {
@@ -25,18 +26,31 @@ export const useGamification = () => {
             const newPoints = currentPoints + amount;
             const newLevel = calculateLevel(newPoints);
 
-            // Update User
-            await updateDoc(userRef, {
+            // Check for active season
+            const activeSeason = await getActiveSeason();
+
+            // Prepare update data
+            const updateData = {
                 totalPoints: increment(amount),
                 level: newLevel
-            });
+            };
 
-            // Add History
-            await addDoc(collection(db, 'history'), {
+            // Add seasonPoints ONLY if season is active
+            if (activeSeason) {
+                updateData.seasonPoints = increment(amount);
+            }
+
+            // Update User
+            await updateDoc(userRef, updateData);
+
+            // Add History with season tracking
+            await addDoc(collection(db, 'xp_history'), {
                 userId: user.uid,
                 type,
-                xpEarned: amount,
-                createdAt: serverTimestamp()
+                xpGained: amount,
+                addedToSeason: !!activeSeason,
+                seasonId: activeSeason?.id || null,
+                timestamp: serverTimestamp()
             });
 
             // Visual Feedback
