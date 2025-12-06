@@ -17,6 +17,7 @@ const Profile = () => {
     const [selectedWorkout, setSelectedWorkout] = useState(null);
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
+    const [showNotifications, setShowNotifications] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -80,20 +81,15 @@ const Profile = () => {
                         {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                     </button>
                     <button
-                        onClick={() => {
-                            Notification.requestPermission().then(permission => {
-                                if (permission === 'granted') {
-                                    new Notification('🎉 Holy Fit', {
-                                        body: 'Notificações ativadas! Você receberá alertas de treino e streak 💪',
-                                        icon: '/logo192.png'
-                                    });
-                                }
-                            });
-                        }}
-                        className="bg-gray-200 dark:bg-gray-800 p-2 rounded-full text-gray-600 dark:text-gray-400 hover:text-neon-purple dark:hover:text-white transition-colors"
-                        title="Ativar Notificações"
+                        onClick={() => setShowNotifications(true)}
+                        className="bg-gray-200 dark:bg-gray-800 p-2 rounded-full text-gray-600 dark:text-gray-400 hover:text-neon-purple dark:hover:text-white transition-colors relative"
+                        title="Notificações"
                     >
                         <Bell size={20} />
+                        {/* Badge de notificações não lidas */}
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
+                            3
+                        </span>
                     </button>
                     <button
                         onClick={handleLogout}
@@ -274,18 +270,7 @@ const Profile = () => {
 
                             <button className="w-full py-4 bg-gray-100 dark:bg-gray-800 rounded-xl font-bold text-gray-900 dark:text-white flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                                 <Share2 size={20} />
-                                Compartilhar Conquista
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-};
+                                <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+                                );
 
-const ClockIcon = ({ size }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-);
-
-export default Profile;
+                                export default Profile;
