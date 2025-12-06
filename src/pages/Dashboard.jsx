@@ -97,6 +97,34 @@ const Dashboard = () => {
         return () => unsubscribe();
     }, []);
 
+    // Request notification permission on first load
+    useEffect(() => {
+        const requestNotificationPermission = async () => {
+            // Check if already asked (stored in localStorage)
+            const hasAskedPermission = localStorage.getItem('notificationPermissionAsked');
+
+            if (!hasAskedPermission && 'Notification' in window) {
+                // Wait 2 seconds after page load for better UX
+                setTimeout(async () => {
+                    const permission = await Notification.requestPermission();
+
+                    if (permission === 'granted') {
+                        new Notification('🎉 Holy Fit', {
+                            body: 'Notificações ativadas! Você receberá alertas de treino e streak 💪',
+                            icon: '/logo192.png',
+                            badge: '/badge-72x72.png'
+                        });
+                    }
+
+                    // Mark as asked
+                    localStorage.setItem('notificationPermissionAsked', 'true');
+                }, 2000);
+            }
+        };
+
+        requestNotificationPermission();
+    }, []);
+
     const handleAddWater = async (amount, e) => {
         if (e) e.stopPropagation(); // Prevent opening the card modal
         if (!auth.currentUser) return;
