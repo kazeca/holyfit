@@ -11,34 +11,56 @@ const Login = () => {
 
     const handleGoogleLogin = async () => {
         try {
+            console.log('🔐 Iniciando login com Google...');
             const result = await signInWithPopup(auth, googleProvider);
             const user = result.user;
+            console.log('✅ Login Google bem-sucedido:', user.email);
 
             // Check if user exists, if not create
             const userRef = doc(db, 'users', user.uid);
+            console.log('📝 Verificando se usuário existe no Firestore...');
+
             const userSnap = await getDoc(userRef);
 
             if (!userSnap.exists()) {
+                console.log('🆕 Criando novo usuário no Firestore...');
                 await setDoc(userRef, {
                     uid: user.uid,
                     displayName: user.displayName,
+                    email: user.email,
                     photoURL: user.photoURL,
                     totalPoints: 0,
+                    seasonPoints: 0,
+                    level: 1,
                     currentStreak: 0,
+                    longestStreak: 0,
+                    workoutsCompleted: 0,
+                    caloriesBurnedToday: 0,
                     lastCheckinDate: null,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    badges: [],
+                    streakShields: 0
                 });
+                console.log('✅ Usuário criado com sucesso!');
+            } else {
+                console.log('✅ Usuário já existe, fazendo login...');
             }
 
+            console.log('🚀 Redirecionando para dashboard...');
             navigate('/');
         } catch (err) {
-            console.error(err);
+            console.error('❌ Erro no login:', err);
+            console.error('Código do erro:', err.code);
+            console.error('Mensagem:', err.message);
+
             if (err.code === 'auth/popup-closed-by-user') {
                 setError('Login cancelado. Tente novamente.');
             } else if (err.code === 'auth/unauthorized-domain') {
-                setError('Domínio não autorizado. Adicione este IP no Firebase Console.');
+                setError('Domínio não autorizado. Entre em contato com o suporte.');
+            } else if (err.code === 'permission-denied') {
+                setError('Erro de permissão. Tente fazer logout e login novamente.');
             } else {
-                setError('Falha ao fazer login. Tente novamente.');
+                setError(`Erro: ${err.message || 'Falha ao fazer login. Tente novamente.'}`);
             }
         }
     };
