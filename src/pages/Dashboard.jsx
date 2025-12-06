@@ -9,6 +9,7 @@ import confetti from 'canvas-confetti';
 import OnboardingModal from '../components/OnboardingModal';
 import PhotoProofModal from '../components/PhotoProofModal';
 import NutritionCard from '../components/NutritionCard';
+import { DashboardGridSkeleton } from '../components/SkeletonLoaders';
 
 const Dashboard = () => {
     const [userData, setUserData] = useState(null);
@@ -169,7 +170,18 @@ const Dashboard = () => {
         }
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>;
+    if (loading) {
+        return (
+            <div className="min-h-screen pb-32 pt-8 px-6 bg-gray-50 dark:bg-gray-950">
+                <div className="flex items-center justify-between mb-8">
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-white italic tracking-tighter">
+                        DASHBOARD
+                    </h1>
+                </div>
+                <DashboardGridSkeleton />
+            </div>
+        );
+    }
 
     const currentLevel = userData?.level || 1;
     const nextLevelXP = currentLevel * 1000;
