@@ -3,7 +3,7 @@ import { auth, db } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Flame, Trophy, Calendar, Moon, Sun, Crown, X, Share2 } from 'lucide-react';
+import { LogOut, Flame, Trophy, Calendar, Moon, Sun, Crown, X, Share2, Settings } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useTheme } from '../context/ThemeContext';
@@ -78,6 +78,13 @@ const Profile = () => {
                         className="bg-gray-200 dark:bg-gray-800 p-2 rounded-full text-gray-600 dark:text-gray-400 hover:text-neon-purple dark:hover:text-white transition-colors"
                     >
                         {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                    </button>
+                    <button
+                        onClick={() => navigate('/settings')}
+                        className="bg-gray-200 dark:bg-gray-800 p-2 rounded-full text-gray-600 dark:text-gray-400 hover:text-neon-purple dark:hover:text-white transition-colors"
+                        title="Configurações"
+                    >
+                        <Settings size={20} />
                     </button>
                     <button
                         onClick={handleLogout}
