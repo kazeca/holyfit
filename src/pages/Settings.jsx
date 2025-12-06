@@ -6,6 +6,71 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Camera, Moon, Sun, Bell, LogOut, Save } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useToast, ToastContainer } from '../components/Toast';
+import { useNotifications } from '../hooks/useNotifications';
+
+// Push Notifications Component
+const PushNotificationsSection = ({ success }) => {
+    const { isSupported, isEnabled, loading, error, enableNotifications } = useNotifications();
+
+    if (!isSupported) {
+        return (
+            <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                ⚠️ Notificações não suportadas neste navegador
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4">
+            {isEnabled ? (
+                <>
+                    <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl">
+                        <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center">
+                            <Bell size={20} className="text-white" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="font-bold text-green-700 dark:text-green-400">✅ Notificações Ativadas</p>
+                            <p className="text-xs text-green-600 dark:text-green-500">Você receberá alertas de treino e streak</p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            new Notification('🎉 Holy Fit', {
+                                body: 'Notificações funcionando perfeitamente! 💪',
+                                icon: '/logo192.png',
+                                badge: '/badge-72x72.png'
+                            });
+                            success('Notificação de teste enviada!');
+                        }}
+                        className="w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 py-3 rounded-xl font-medium active:scale-95 transition-transform"
+                    >
+                        🧪 Testar Notificação
+                    </button>
+                </>
+            ) : (
+                <button
+                    onClick={enableNotifications}
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform disabled:opacity-50"
+                >
+                    {loading ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    ) : (
+                        <>
+                            <Bell size={20} />
+                            Ativar Notificações
+                        </>
+                    )}
+                </button>
+            )}
+
+            {error && (
+                <p className="text-sm text-red-500 text-center">{error}</p>
+            )}
+        </div>
+    );
+};
 
 const Settings = () => {
     const navigate = useNavigate();
@@ -122,6 +187,16 @@ const Settings = () => {
                             <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${notifications ? 'translate-x-6' : ''}`}></div>
                         </button>
                     </div>
+                </div>
+
+                {/* Push Notifications Section */}
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-[2rem] shadow-sm">
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">🔔 Notificações Push</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                        Receba lembretes de treino e alertas de streak
+                    </p>
+
+                    <PushNotificationsSection success={success} />
                 </div>
 
                 {/* Save Button */}
