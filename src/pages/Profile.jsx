@@ -9,6 +9,7 @@ import { ptBR } from 'date-fns/locale';
 import { useTheme } from '../context/ThemeContext';
 import ActivityHeatmap from '../components/ActivityHeatmap';
 import { BADGES } from '../utils/badges';
+import { getRankByLevel } from '../utils/rankUtils';
 
 const Profile = () => {
     const [userData, setUserData] = useState(null);
@@ -120,6 +121,22 @@ const Profile = () => {
                     </div>
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">{auth.currentUser?.displayName}</h2>
+
+                {/* Evolutionary Title Badge */}
+                {userData && (() => {
+                    const currentLevel = Math.floor((userData.totalPoints || 0) / 1000) + 1;
+                    const currentRank = getRankByLevel(currentLevel);
+
+                    return (
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full mt-2 mb-1 ${currentRank.bgGradient} border ${currentRank.border}`}>
+                            <span className="text-2xl">{currentRank.emoji}</span>
+                            <span className={`font-black text-sm ${currentRank.gradient} bg-clip-text text-transparent`}>
+                                {currentRank.title}
+                            </span>
+                        </div>
+                    );
+                })()}
+
                 <p className="text-gray-400 text-sm mb-4">Membro desde {userData?.createdAt ? format(new Date(userData.createdAt), "MMM yyyy", { locale: ptBR }) : '-'}</p>
 
                 <button
