@@ -128,32 +128,6 @@ const Profile = () => {
                 </div>
             </div>
 
-            {/* TEMPORARY: Reset Stats Button for Testing */}
-            <div className="mb-4 p-4 bg-red-900/20 border border-red-500 rounded-xl">
-                <p className="text-red-400 text-sm mb-2">⚠️ Botão Temporário de Teste</p>
-                <button
-                    onClick={async () => {
-                        if (!auth.currentUser) return;
-                        if (!window.confirm('Resetar stats de treino? (workoutsCompleted e caloriesBurnedToday)')) return;
-
-                        try {
-                            const userRef = firestoreDoc(db, 'users', auth.currentUser.uid);
-                            await updateDoc(userRef, {
-                                workoutsCompleted: 0,
-                                caloriesBurnedToday: 0
-                            });
-                            alert('✅ Stats resetados! Recarregue a página (F5)');
-                        } catch (error) {
-                            console.error('Erro:', error);
-                            alert('❌ Erro ao resetar stats');
-                        }
-                    }}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-                >
-                    🔄 Resetar Stats de Treino
-                </button>
-            </div>
-
             {/* User Info */}
             <div className="flex flex-col items-center mb-8">
                 <div className="relative mb-4">
