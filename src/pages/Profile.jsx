@@ -172,6 +172,21 @@ const Profile = () => {
                 </div>
             </div>
 
+            {/* Streak Shield Card */}
+            <div className="mb-8">
+                <StreakShieldCard
+                    userData={userData}
+                    onUpdate={async () => {
+                        const user = auth.currentUser;
+                        if (!user) return;
+                        const userRef = doc(db, 'users', user.uid);
+                        const userSnap = await getDoc(userRef);
+                        if (userSnap.exists()) {
+                            setUserData(userSnap.data());
+                        }
+                    }}
+                />
+            </div>
 
             {/* Badges */}
             <div className="mb-8">
