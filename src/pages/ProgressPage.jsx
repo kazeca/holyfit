@@ -165,30 +165,32 @@ const ProgressPage = () => {
                 <h1 className="text-3xl font-black text-white">Progresso</h1>
             </div>
 
-            {/* Statistics Summary */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                        <Activity className="text-cyan-500" size={20} />
-                        <span className="text-3xl font-black text-white">{stats.weeklyAverage}</span>
+            {/* Statistics Summary - Only show if there's workout data */}
+            {workoutData.length > 0 && (
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                    <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <Activity className="text-cyan-500" size={20} />
+                            <span className="text-3xl font-black text-white">{stats.weeklyAverage}</span>
+                        </div>
+                        <p className="text-slate-400 text-xs">Media treinos/dia</p>
                     </div>
-                    <p className="text-slate-400 text-xs">Media treinos/dia</p>
-                </div>
 
-                <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                        {stats.comparisonLastWeek >= 0 ? (
-                            <TrendingUp className="text-green-500" size={20} />
-                        ) : (
-                            <TrendingDown className="text-red-500" size={20} />
-                        )}
-                        <span className={`text-3xl font-black ${stats.comparisonLastWeek >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                            {stats.comparisonLastWeek >= 0 ? '+' : ''}{stats.comparisonLastWeek}
-                        </span>
+                    <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                            {stats.comparisonLastWeek >= 0 ? (
+                                <TrendingUp className="text-green-500" size={20} />
+                            ) : (
+                                <TrendingDown className="text-red-500" size={20} />
+                            )}
+                            <span className={`text-3xl font-black ${stats.comparisonLastWeek >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                {stats.comparisonLastWeek >= 0 ? '+' : ''}{stats.comparisonLastWeek}
+                            </span>
+                        </div>
+                        <p className="text-slate-400 text-xs">vs semana passada</p>
                     </div>
-                    <p className="text-slate-400 text-xs">vs semana passada</p>
                 </div>
-            </div>
+            )}
 
             {/* Export Button */}
             <button
