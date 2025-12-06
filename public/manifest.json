@@ -1,0 +1,63 @@
+{
+    "name": "Holy Fit",
+    "short_name": "Holy Fit",
+    "description": "Aplicativo de fitness gamificado para mulheres cristãs",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#000000",
+    "theme_color": "#A855F7",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/logo192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/logo512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "health",
+        "fitness",
+        "lifestyle"
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshot1.png",
+            "sizes": "1080x1920",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Novo Treino",
+            "short_name": "Treino",
+            "description": "Registrar novo treino",
+            "url": "/create-workout",
+            "icons": [
+                {
+                    "src": "/icon-workout.png",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Badges",
+            "short_name": "Conquistas",
+            "description": "Ver badges conquistados",
+            "url": "/badges",
+            "icons": [
+                {
+                    "src": "/icon-badge.png",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ]
+}
