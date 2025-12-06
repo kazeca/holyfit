@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { db, auth } from '../firebase';
 import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
 import { Trophy, Crown, Medal } from 'lucide-react';
+import { LeaderboardItemSkeleton } from '../components/SkeletonLoaders';
 
 const Leaderboard = () => {
     const [leaderboard, setLeaderboard] = useState([]);
@@ -96,8 +97,19 @@ const Leaderboard = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black dark:border-white"></div>
+            <div className="min-h-screen pb-24 pt-6 px-4 bg-gray-50 dark:bg-gray-950">
+                <div className="flex items-center gap-4 mb-8">
+                    <h1 className="text-3xl font-black text-gray-900 dark:text-white italic tracking-tighter">
+                        RANKING
+                    </h1>
+                </div>
+
+                {/* Skeleton Loaders */}
+                <div className="space-y-3">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <LeaderboardItemSkeleton key={i} />
+                    ))}
+                </div>
             </div>
         );
     }
