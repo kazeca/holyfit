@@ -1,30 +1,137 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Users collection
+    
+    // ===== HELPER FUNCTIONS =====
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdmin() {
+      // TEMPORÁRIO: Verificar no documento
+      // FUTURO: Usar Custom Claims (request.auth.token.admin == true)
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isValidUser(data) {
+      return data.keys().hasAll(['displayName', 'email', 'createdAt']) &&
+             data.displayName is string &&
+             data.email is string;
+    }
+    
+    // ===== USERS =====
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == userId || get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
-      allow create: if request.auth.uid == userId;
+      // Qualquer usuário autenticado pode ler perfis
+      allow read: if isAuthenticated();
+      
+      // Criar apenas próprio perfil
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == userId &&
+                       isValidUser(request.resource.data);
+      
+      // Atualizar apenas próprio perfil
+      // BLOQUEAR campos críticos que só o backend pode modificar
+      allow update: if isOwner(userId) && 
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['totalPoints', 'seasonPoints', 'level', 'role', 'badges', 'isBanned', 'createdAt']);
+      
+      // Apenas backend pode deletar
+      allow delete: if false;
     }
     
-    // Workouts collection
+    // ===== WORKOUTS =====
     match /workouts/{workoutId} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Todos podem ver workouts (feed público)
+      allow read: if isAuthenticated();
+      
+      // Criar apenas próprio workout
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.keys().hasAll(['userId', 'sportName', 'timestamp']);
+      
+      // Atualizar/deletar apenas próprio workout
+      allow update, delete: if isAuthenticated() && 
+                               resource.data.userId == request.auth.uid;
     }
     
-    // Challenges collection
+    // ===== XP HISTORY =====
+    match /xp_history/{historyId} {
+      // Ler apenas próprio histórico
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Criar apenas próprio histórico
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Histórico é imutável
+      allow update, delete: if false;
+    }
+    
+    // ===== CUSTOM WORKOUTS =====
+    match /custom_workouts/{workoutId} {
+      // Todos podem ver workouts customizados
+      allow read: if isAuthenticated();
+      
+      // Criar apenas próprio workout customizado
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Atualizar/deletar apenas próprio workout
+      allow update, delete: if isAuthenticated() && 
+                               resource.data.userId == request.auth.uid;
+    }
+    
+    // ===== CHALLENGES =====
     match /challenges/{challengeId} {
-      allow read: if request.auth != null;
-      allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      // Todos podem ver desafios
+      allow read: if isAuthenticated();
+      
+      // Apenas admin pode criar/modificar desafios
+      allow create, update, delete: if isAdmin();
     }
     
-    // Seasons collection
+    // ===== SEASONS (ADMIN ONLY) =====
     match /seasons/{seasonId} {
-      allow read: if request.auth != null;
-      allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      // Todos podem ver seasons
+      allow read: if isAuthenticated();
+      
+      // Apenas admin pode criar/modificar seasons
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // ===== MISSIONS =====
+    match /missions/{missionId} {
+      // Todos podem ver missões
+      allow read: if isAuthenticated();
+      
+      // Apenas admin pode criar/modificar missões
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // ===== USER MISSIONS (Progress) =====
+    match /user_missions/{userMissionId} {
+      // Ler apenas próprio progresso
+      allow read: if isAuthenticated() && 
+                     resource.data.userId == request.auth.uid;
+      
+      // Criar/atualizar apenas próprio progresso
+      allow create, update: if isAuthenticated() && 
+                               request.resource.data.userId == request.auth.uid;
+      
+      // Não pode deletar
+      allow delete: if false;
+    }
+    
+    // ===== DENY DEFAULT =====
+    // Qualquer coleção não especificada é bloqueada
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
