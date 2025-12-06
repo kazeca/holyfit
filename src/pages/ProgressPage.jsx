@@ -65,39 +65,56 @@ const ProgressPage = () => {
             const fourteenDaysAgo = new Date();
             fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
-            // Fetch workouts - remove orderBy to avoid index requirement
+            // Fetch ALL user workouts (simpler query, no index needed)
             const workoutsRef = collection(db, 'workouts');
             const workoutsQuery = query(
                 workoutsRef,
-                where('userId', '==', auth.currentUser.uid),
-                where('createdAt', '>=', fourteenDaysAgo),
-                limit(30)
+                where('userId', '==', auth.currentUser.uid)
             );
+
             const workoutsSnap = await getDocs(workoutsQuery);
             const allWorkouts = workoutsSnap.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
-                .sort((a, b) => b.createdAt?.toDate() - a.createdAt?.toDate());
+                .filter(w => {
+                    // Handle both 'createdAt' and 'date' fields
+                    const workoutDate = w.createdAt?.toDate?.() || (w.date ? new Date(w.date) : null);
+                    return workoutDate && workoutDate >= fourteenDaysAgo;
+                })
+                .sort((a, b) => {
+                    const dateA = a.createdAt?.toDate?.() || new Date(a.date);
+                    const dateB = b.createdAt?.toDate?.() || new Date(b.date);
+                    return dateB - dateA;
+                });
 
-            const workouts = allWorkouts.filter(w => w.createdAt?.toDate() >= sevenDaysAgo).slice(0, 7);
-            const lastWeekWorkouts = allWorkouts.filter(w =>
-                w.createdAt?.toDate() >= fourteenDaysAgo && w.createdAt?.toDate() < sevenDaysAgo
-            );
+            const workouts = allWorkouts.filter(w => {
+                const workoutDate = w.createdAt?.toDate?.() || new Date(w.date);
+                return workoutDate >= sevenDaysAgo;
+            }).slice(0, 30);
+
+            const lastWeekWorkouts = allWorkouts.filter(w => {
+                const workoutDate = w.createdAt?.toDate?.() || new Date(w.date);
+                return workoutDate >= fourteenDaysAgo && workoutDate < sevenDaysAgo;
+            });
 
             setWorkoutData(workouts);
 
-            // Fetch XP history - remove orderBy to avoid index requirement
+            // Fetch XP history - simpler query
             const xpRef = collection(db, 'xp_history');
             const xpQuery = query(
                 xpRef,
-                where('userId', '==', auth.currentUser.uid),
-                where('timestamp', '>=', sevenDaysAgo),
-                limit(50)
+                where('userId', '==', auth.currentUser.uid)
             );
+
             const xpSnap = await getDocs(xpQuery);
             const xp = xpSnap.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(x => {
+                    const xpDate = x.timestamp?.toDate?.();
+                    return xpDate && xpDate >= sevenDaysAgo;
+                })
                 .sort((a, b) => b.timestamp?.toDate() - a.timestamp?.toDate())
-                .slice(0, 20);
+                .slice(0, 50);
+
             setXpData(xp);
 
             // Calculate statistics
@@ -127,7 +144,8 @@ const ProgressPage = () => {
 
     const getWorkoutsForDay = (date) => {
         return workoutData.filter(workout => {
-            const workoutDate = workout.createdAt?.toDate();
+            // Handle both 'createdAt' (Timestamp) and 'date' (String) fields
+            const workoutDate = workout.createdAt?.toDate?.() || (workout.date ? new Date(workout.date) : null);
             return workoutDate && workoutDate.toDateString() === date.toDateString();
         }).length;
     };
@@ -135,7 +153,7 @@ const ProgressPage = () => {
     const getXPForDay = (date) => {
         return xpData
             .filter(xp => {
-                const xpDate = xp.timestamp?.toDate();
+                const xpDate = xp.timestamp?.toDate?.();
                 return xpDate && xpDate.toDateString() === date.toDateString();
             })
             .reduce((sum, xp) => sum + (xp.amount || 0), 0);
