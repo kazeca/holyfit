@@ -32,7 +32,7 @@ export const requestNotificationPermission = async () => {
         // Note: You need to generate a VAPID key in Firebase Console
         // Project Settings > Cloud Messaging > Web Push certificates
         const token = await getToken(messaging, {
-            vapidKey: 'YOUR_VAPID_KEY_HERE' // TODO: Replace with actual VAPID key
+            vapidKey: 'BO0KiGC0GZm5sbhNXCSngBZvcJKZX2Dq-FsQdgz0bF3TT-pMfeXKK0wN4kCVLgBF79ghAKUBMu2IdAmSVdbmgzE'
         });
 
         // Save token to Firestore
