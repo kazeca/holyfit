@@ -25,10 +25,22 @@ const Leaderboard = () => {
     useEffect(() => {
         const fetchLeaderboard = async () => {
             try {
-                const q = query(collection(db, 'users'), orderBy('seasonPoints', 'desc'), limit(50));
+                // Fetch all users without orderBy (works without index)
+                const q = query(collection(db, 'users'), limit(100));
                 const querySnapshot = await getDocs(q);
                 const users = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setLeaderboard(users);
+
+                // Sort client-side by seasonPoints
+                const sortedUsers = users
+                    .filter(user => user.seasonPoints > 0 || user.totalPoints > 0) // Only users with points
+                    .sort((a, b) => {
+                        const pointsA = rankingType === 'season' ? (a.seasonPoints || 0) : (a.totalPoints || 0);
+                        const pointsB = rankingType === 'season' ? (b.seasonPoints || 0) : (b.totalPoints || 0);
+                        return pointsB - pointsA;
+                    })
+                    .slice(0, 50); // Top 50
+
+                setLeaderboard(sortedUsers);
             } catch (error) {
                 console.error("Error fetching leaderboard:", error);
             } finally {
@@ -152,8 +164,8 @@ const Leaderboard = () => {
                 <button
                     onClick={() => setRankingType('season')}
                     className={`flex-1 py-3 rounded-lg text-sm font-black transition-all ${rankingType === 'season'
-                            ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg scale-105'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white shadow-lg scale-105'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                         }`}
                 >
                     🏆 Temporada
@@ -161,8 +173,8 @@ const Leaderboard = () => {
                 <button
                     onClick={() => setRankingType('alltime')}
                     className={`flex-1 py-3 rounded-lg text-sm font-black transition-all ${rankingType === 'alltime'
-                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                         }`}
                 >
                     👑 Geral

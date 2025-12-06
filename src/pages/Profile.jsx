@@ -138,12 +138,24 @@ const Profile = () => {
                 </div>
             </div>
 
+
             {/* Badges */}
             <div className="mb-8">
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-yellow-500 rounded-full"></span>
-                    Conquistas
-                </h3>
+                <div
+                    onClick={() => navigate('/badges')}
+                    className="flex items-center justify-between mb-4 cursor-pointer group"
+                >
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <span className="w-1 h-6 bg-yellow-500 rounded-full"></span>
+                        Conquistas
+                    </h3>
+                    <button className="text-xs font-bold text-yellow-500 hover:text-yellow-400 transition-colors flex items-center gap-1">
+                        Ver todos
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                     {BADGES.map((badge) => {
                         const isUnlocked = userData && badge.condition(userData, workouts);
@@ -163,6 +175,7 @@ const Profile = () => {
                     })}
                 </div>
             </div>
+
 
             {/* Workouts Grid */}
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
