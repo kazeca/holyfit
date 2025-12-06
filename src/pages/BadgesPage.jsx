@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { BADGES, BADGE_CATEGORIES } from '../data/badges';
+import { BadgeSkeleton } from '../components/SkeletonLoaders';
 
 const BadgesPageEnhanced = () => {
     const navigate = useNavigate();
@@ -102,8 +103,19 @@ const BadgesPageEnhanced = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-950">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+            <div className="min-h-screen pb-32 pt-8 px-6 bg-gray-950">
+                <div className="flex items-center gap-4 mb-8">
+                    <h1 className="text-3xl font-black text-white italic tracking-tighter">
+                        CONQUISTAS
+                    </h1>
+                </div>
+
+                {/* Skeleton Loaders */}
+                <div className="grid grid-cols-3 gap-4">
+                    {[...Array(15)].map((_, i) => (
+                        <BadgeSkeleton key={i} />
+                    ))}
+                </div>
             </div>
         );
     }
