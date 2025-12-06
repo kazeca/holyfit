@@ -10,6 +10,7 @@ import { useTheme } from '../context/ThemeContext';
 import ActivityHeatmap from '../components/ActivityHeatmap';
 import { BADGES } from '../utils/badges';
 import { getRankByLevel } from '../utils/rankUtils';
+import StreakShieldCard from '../components/StreakShieldCard';
 
 const Profile = () => {
     const [userData, setUserData] = useState(null);
