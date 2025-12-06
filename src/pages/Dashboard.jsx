@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '../firebase';
 import { doc, onSnapshot, updateDoc, increment } from 'firebase/firestore';
-import { Activity, Droplets, Flame, Zap, Plus, X, Settings, HelpCircle, Crown, Lightbulb, Camera } from 'lucide-react';
+import { Activity, Droplets, Flame, Zap, Plus, X, Settings, HelpCircle, Crown, Lightbulb, Camera, Calculator, TrendingUp, Target } from 'lucide-react';
+import { getRankByLevel } from '../utils/rankUtils';
 import { useGamification } from '../hooks/useGamification';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
@@ -184,9 +185,20 @@ const Dashboard = () => {
 
                     <div className="flex justify-between items-end">
                         <div className="flex-1 mr-4">
-                            <h1 className="text-3xl font-black text-white tracking-tight mb-3">
+                            <h1 className="text-3xl font-black text-white tracking-tight mb-1">
                                 Hello, {auth.currentUser?.displayName?.split(' ')[0] || 'User'}!
                             </h1>
+
+                            {/* Evolutionary Title Badge */}
+                            {userData && (() => {
+                                const rank = getRankByLevel(currentLevel);
+                                return (
+                                    <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r ${rank.bgGradient} border ${rank.border} mb-2`}>
+                                        <span className="text-sm">{rank.emoji}</span>
+                                        <span className={`text-xs font-bold ${rank.color}`}>{rank.title}</span>
+                                    </div>
+                                );
+                            })()}
 
                             {/* XP Bar */}
                             <div className="w-full bg-gray-700/50 rounded-full h-2 mb-2 overflow-hidden">
@@ -317,6 +329,93 @@ const Dashboard = () => {
                     <p className="text-gray-400 text-xs relative z-10">
                         💡 Uma nova dica todo dia!
                     </p>
+                </div>
+
+                {/* Ferramentas Fitness (Purple) */}
+                <div
+                    onClick={() => navigate('/calculators')}
+                    className="col-span-1 bg-slate-800 border border-slate-700/50 hover:border-purple-500/50 rounded-[2rem] p-5 text-white shadow-lg relative overflow-hidden h-48 cursor-pointer active:scale-95 transition-all flex flex-col justify-between"
+                >
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 rounded-full bg-purple-500/10">
+                            <Calculator className="text-purple-500" size={20} />
+                        </div>
+                        <h3 className="text-white font-bold text-lg">FERRAMENTAS</h3>
+                    </div>
+
+                    <p className="text-slate-300 text-sm leading-relaxed mb-4 font-medium">
+                        Calcule IMC, macros e mais.
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                        <span className="text-slate-400 text-xs">5 calculadoras</span>
+                        <span className="bg-purple-500/10 text-purple-400 px-4 py-1.5 rounded-full text-xs font-bold">Acessar</span>
+                    </div>
+                </div>
+
+                {/* Progresso (Cyan) */}
+                <div
+                    onClick={() => navigate('/progress')}
+                    className="col-span-1 bg-slate-800 border border-slate-700/50 hover:border-cyan-500/50 rounded-[2rem] p-5 text-white shadow-lg relative overflow-hidden h-48 cursor-pointer active:scale-95 transition-all flex flex-col justify-between"
+                >
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 rounded-full bg-cyan-500/10">
+                            <TrendingUp className="text-cyan-500" size={20} />
+                        </div>
+                        <h3 className="text-white font-bold text-lg">PROGRESSO</h3>
+                    </div>
+
+                    <div className="flex items-end gap-1 h-16 mb-3 opacity-80">
+                        {[...Array(7)].map((_, i) => {
+                            const hasActivity = i < 5;
+                            return (
+                                <div
+                                    key={i}
+                                    className={`flex-1 rounded-t-sm transition-all ${hasActivity ? 'bg-cyan-500 shadow-sm shadow-cyan-500/50' : 'bg-slate-700'}`}
+                                    style={{ height: hasActivity ? `${30 + Math.random() * 60}%` : '15%' }}
+                                />
+                            );
+                        })}
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                        <span className="text-slate-400 text-xs">Seus stats</span>
+                        <span className="bg-cyan-500/10 text-cyan-400 px-4 py-1.5 rounded-full text-xs font-bold">Abrir</span>
+                    </div>
+                </div>
+
+                {/* Missões (Pink) */}
+                <div
+                    onClick={() => navigate('/missions')}
+                    className="col-span-2 bg-slate-800 border border-slate-700/50 hover:border-pink-500/50 rounded-[2rem] p-5 text-white shadow-lg relative overflow-hidden h-48 cursor-pointer active:scale-95 transition-all flex flex-col justify-between"
+                >
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 rounded-full bg-pink-500/10">
+                                <Target className="text-pink-500" size={20} />
+                            </div>
+                            <h3 className="text-white font-bold text-lg">MISSÕES</h3>
+                        </div>
+
+                        <div className="relative w-16 h-16">
+                            <svg className="w-full h-full transform -rotate-90">
+                                <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="none" className="text-slate-700" />
+                                <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="none" className="text-pink-500" strokeDasharray={175} strokeDashoffset={175 - (175 * (2 / 3))} strokeLinecap="round" />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center text-xs font-black">
+                                2/3
+                            </div>
+                        </div>
+                    </div>
+
+                    <p className="text-slate-300 text-sm mb-3">
+                        Complete missões diárias para ganhar XP extra!
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                        <span className="text-slate-400 text-xs">Hoje</span>
+                        <span className="bg-pink-500/10 text-pink-400 px-4 py-1.5 rounded-full text-xs font-bold">Ver todas</span>
+                    </div>
                 </div>
             </div>
 
