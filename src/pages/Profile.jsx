@@ -153,7 +153,7 @@ const Profile = () => {
                     return (
                         <div className={`flex items-center gap-2 px-4 py-2 rounded-full mt-2 mb-1 ${currentRank.bgGradient} border ${currentRank.border}`}>
                             <span className="text-2xl">{currentRank.emoji}</span>
-                            <span className={`font-black text-sm ${currentRank.gradient} bg-clip-text text-transparent`}>
+                            <span className={`font-black text-sm ${currentRank.color}`}>
                                 {currentRank.title}
                             </span>
                         </div>
