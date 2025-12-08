@@ -218,13 +218,26 @@ export const completeChallengeWithPhoto = async (photoFile, challengeData, photo
  */
 export const completeWorkoutWithPhoto = async (photoFile, workoutData, photoHash) => {
     const user = auth.currentUser;
-    if (!user) throw new Error('Usuário não autenticado');
+    if (!user) {
+        console.error('❌ [WORKOUT] No authenticated user');
+        throw new Error('Usuário não autenticado');
+    }
+
+    console.log('🔵 [WORKOUT] Starting workout completion...', {
+        userId: user.uid,
+        workoutName: workoutData.workoutName,
+        xp: workoutData.xp,
+        photoHash
+    });
 
     try {
         // 1. Upload photo
+        console.log('🔵 [WORKOUT] Step 1: Uploading photo...');
         const photoURL = await uploadProofPhoto(photoFile, user.uid, 'workouts');
+        console.log('✅ [WORKOUT] Photo uploaded:', photoURL);
 
         // 2. Save workout completion
+        console.log('🔵 [WORKOUT] Step 2: Saving workout to Firestore...');
         const completionData = {
             userId: user.uid,
             userName: user.displayName || 'Usuário',
@@ -236,10 +249,11 @@ export const completeWorkoutWithPhoto = async (photoFile, workoutData, photoHash
             createdAt: serverTimestamp()
         };
 
-        // Save to workouts collection
         await addDoc(collection(db, 'workouts'), completionData);
+        console.log('✅ [WORKOUT] Workout saved to Firestore');
 
         // 3. Update user stats
+        console.log('🔵 [WORKOUT] Step 3: Updating user stats...');
         const userRef = doc(db, 'users', user.uid);
         await updateDoc(userRef, {
             totalPoints: increment(completionData.xpAwarded),
@@ -247,17 +261,26 @@ export const completeWorkoutWithPhoto = async (photoFile, workoutData, photoHash
             workoutsCompleted: increment(1),
             lastWorkoutDate: serverTimestamp()
         });
+        console.log('✅ [WORKOUT] User stats updated');
 
         // 4. Create feed post
+        console.log('🔵 [WORKOUT] Step 4: Creating feed post...');
         await createFeedPost('Treino Realizado', {
             ...completionData,
             userLevel: workoutData.userLevel || 1,
             description: `Completou treino: ${completionData.workoutName}`
         });
+        console.log('✅ [WORKOUT] Feed post created');
 
+        console.log('✅ [WORKOUT] COMPLETE! Returning success...');
         return { success: true, photoURL };
     } catch (error) {
-        console.error('Error completing workout:', error);
+        console.error('❌ [WORKOUT] ERROR:', {
+            message: error.message,
+            code: error.code,
+            stack: error.stack,
+            fullError: error
+        });
         throw error;
     }
 };

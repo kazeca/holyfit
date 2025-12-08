@@ -113,23 +113,38 @@ const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete
         }
     };
 
+
     const handleConfirm = async () => {
-        if (!selectedFile || !auth.currentUser) return;
+        if (!selectedFile || !auth.currentUser) {
+            console.error('❌ No file or user:', { selectedFile: !!selectedFile, user: !!auth.currentUser });
+            return;
+        }
+
+        console.log('🔵 [PHOTO UPLOAD] Starting...', {
+            actionType,
+            fileSize: selectedFile.size,
+            fileType: selectedFile.type,
+            userId: auth.currentUser.uid
+        });
 
         setLoading(true);
         setError(null);
 
         // Safety timeout - if upload takes more than 30s, show error
         const timeoutId = setTimeout(() => {
+            console.error('⏰ [PHOTO UPLOAD] TIMEOUT after 30s');
             setLoading(false);
             setError('Upload demorou muito. Tente novamente com uma foto menor.');
         }, 30000);
 
         try {
             // Validate photo
+            console.log('🔵 [PHOTO UPLOAD] Step 1: Validating photo...');
             const validation = await validateChallengePhoto(selectedFile, auth.currentUser.uid);
+            console.log('✅ [PHOTO UPLOAD] Validation result:', validation);
 
             if (!validation.valid) {
+                console.error('❌ [PHOTO UPLOAD] Validation failed:', validation.error);
                 clearTimeout(timeoutId);
                 setError(validation.error);
                 setLoading(false);
@@ -137,40 +152,56 @@ const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete
             }
 
             // Complete action based on type
+            console.log('🔵 [PHOTO UPLOAD] Step 2: Completing action...', { actionType });
+
             if (actionType === 'workout') {
+                console.log('🔵 [PHOTO UPLOAD] Importing completeWorkoutWithPhoto...');
                 const { completeWorkoutWithPhoto } = await import('../utils/challengeService');
-                await completeWorkoutWithPhoto(selectedFile, {
+                console.log('🔵 [PHOTO UPLOAD] Calling completeWorkoutWithPhoto...');
+                const result = await completeWorkoutWithPhoto(selectedFile, {
                     ...data,
                     userLevel
                 }, validation.photoHash);
+                console.log('✅ [PHOTO UPLOAD] Workout completed:', result);
             } else if (actionType === 'meal') {
+                console.log('🔵 [PHOTO UPLOAD] Completing meal...');
                 await completeMealWithPhoto(selectedFile, {
                     ...data,
                     userLevel
                 }, validation.photoHash);
+                console.log('✅ [PHOTO UPLOAD] Meal completed');
             } else {
                 // Challenge
+                console.log('🔵 [PHOTO UPLOAD] Completing challenge...');
                 await completeChallengeWithPhoto(selectedFile, {
                     ...data,
                     userLevel
                 }, validation.photoHash);
+                console.log('✅ [PHOTO UPLOAD] Challenge completed');
             }
 
             clearTimeout(timeoutId);
 
             // Success!
+            console.log('✅ [PHOTO UPLOAD] SUCCESS! Setting success state...');
             setSuccess(true);
             setLoading(false);
             triggerSuccessConfetti();
 
             // Close after 3 seconds
             setTimeout(() => {
+                console.log('🔵 [PHOTO UPLOAD] Closing modal...');
                 onComplete();
             }, 3000);
 
         } catch (err) {
             clearTimeout(timeoutId);
-            console.error(`Error completing ${actionType}:`, err);
+            console.error('❌ [PHOTO UPLOAD] ERROR:', {
+                message: err.message,
+                code: err.code,
+                stack: err.stack,
+                fullError: err
+            });
             setError(err.message || `Erro ao completar ${actionType === 'workout' ? 'treino' : 'desafio'}. Tente novamente.`);
             setLoading(false);
         }
