@@ -21,6 +21,7 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminSeasons from './pages/admin/AdminSeasons';
 import AdminBadges from './pages/admin/AdminBadges';
 import AdminNotifications from './pages/admin/AdminNotifications';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminLayout from './components/admin/AdminLayout';
 
 function App() {
@@ -112,6 +113,7 @@ function App() {
           <Route path="seasons" element={<AdminSeasons />} />
           <Route path="badges" element={<AdminBadges />} />
           <Route path="notifications" element={<AdminNotifications />} />
+          <Route path="analytics" element={<AdminAnalytics />} />
         </Route>
       </Routes>
     </Router>
