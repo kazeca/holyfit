@@ -149,7 +149,8 @@ const AdminDashboard = () => {
                     </button>
                 </div>
             </div>
-            );
+        </div>
+    );
 };
 
-            export default AdminDashboard;
+export default AdminDashboard;
