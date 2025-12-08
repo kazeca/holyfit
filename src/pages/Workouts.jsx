@@ -31,7 +31,7 @@ const Workouts = () => {
         if (!auth.currentUser) return;
         setLoadingWorkouts(true);
         try {
-            // Removed orderBy to avoid missing index error. Sorting client-side.
+            // Fetch all user workouts and filter by date client-side
             const q = query(
                 collection(db, 'workouts'),
                 where('userId', '==', auth.currentUser.uid)
@@ -41,10 +41,16 @@ const Workouts = () => {
             const workouts = snapshot.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .filter(w => {
-                    const wDate = new Date(w.date);
+                    // Handle both 'createdAt' (Timestamp) and 'date' (String) fields
+                    const wDate = w.createdAt?.toDate?.() || (w.date ? new Date(w.date) : null);
+                    if (!wDate) return false;
                     return wDate >= startOfDay(date) && wDate <= endOfDay(date);
                 })
-                .sort((a, b) => new Date(b.date) - new Date(a.date)); // Sort desc
+                .sort((a, b) => {
+                    const dateA = a.createdAt?.toDate?.() || new Date(a.date);
+                    const dateB = b.createdAt?.toDate?.() || new Date(b.date);
+                    return dateB - dateA; // Sort desc
+                });
 
             setDailyWorkouts(workouts);
         } catch (error) {

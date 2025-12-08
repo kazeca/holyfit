@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+</head>
+<body>
+    <h1>Gerando Ícones PWA...</h1>
+    <canvas id="canvas192" width="192" height="192"></canvas>
+    <canvas id="canvas512" width="512" height="512"></canvas>
+    <div id="downloads"></div>
+
+    <script>
+        // Função para criar ícone
+        function createIcon(size) {
+            const canvas = document.getElementById(`canvas${size}`);
+            const ctx = canvas.getContext('2d');
+
+            // Fundo com gradiente roxo
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#A855F7'); // Purple
+            gradient.addColorStop(1, '#EC4899'); // Pink
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // Troféu (emoji)
+            ctx.font = `${size * 0.6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🏆', size / 2, size / 2);
+
+            // Download
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `logo${size}.png`;
+                a.textContent = `Download logo${size}.png`;
+                a.style.display = 'block';
+                a.style.margin = '10px';
+                document.getElementById('downloads').appendChild(a);
+            });
+        }
+
+        // Gerar ícones
+        createIcon(192);
+        createIcon(512);
+    </script>
+</body>
+</html>
