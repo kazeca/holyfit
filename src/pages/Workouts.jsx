@@ -104,7 +104,7 @@ const Workouts = () => {
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 min-w-[100px] flex-1">
                             <div className="text-blue-500 mb-1"><Timer size={20} /></div>
                             <p className="text-2xl font-black text-white">{userData?.workoutsCompleted || 0}</p>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase">Treinos</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase">Total</p>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-4 min-w-[100px] flex-1">
                             <div className="text-purple-500 mb-1"><BarChart3 size={20} /></div>
