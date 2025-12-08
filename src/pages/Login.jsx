@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, getDocs, collection } from 'firebase/firestore';
 import { Trophy, Zap } from 'lucide-react';
 
 const Login = () => {
@@ -54,6 +54,11 @@ const Login = () => {
             if (!userSnap.exists()) {
                 console.log('🆕 Criando novo usuário no Firestore...');
                 const today = new Date().toISOString().split('T')[0];
+
+                // Check if this is the first user (make them admin)
+                const usersSnapshot = await getDocs(collection(db, 'users'));
+                const isFirstUser = usersSnapshot.empty;
+
                 await setDoc(userRef, {
                     uid: user.uid,
                     displayName: user.displayName,
@@ -66,12 +71,17 @@ const Login = () => {
                     longestStreak: 0,
                     workoutsCompleted: 0,
                     caloriesBurnedToday: 0,
-                    lastCalorieReset: today, // Initialize with today
+                    lastCalorieReset: today,
                     lastCheckinDate: null,
                     createdAt: new Date().toISOString(),
                     badges: [],
-                    streakShields: 0
+                    streakShields: 0,
+                    role: isFirstUser ? 'admin' : 'user' // First user is admin!
                 });
+
+                if (isFirstUser) {
+                    console.log('👑 Você é o primeiro usuário! Admin role concedido!');
+                }
                 console.log('✅ Usuário criado com sucesso!');
             } else {
                 console.log('✅ Usuário já existe, fazendo login...');
