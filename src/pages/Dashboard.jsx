@@ -21,7 +21,7 @@ const Dashboard = () => {
     const [showInfoModal, setShowInfoModal] = useState(false); // For "How it works"
     const [showOnboarding, setShowOnboarding] = useState(false); // For first-time users
     const [showPhotoCapture, setShowPhotoCapture] = useState(false); // For challenge photo capture
-    const [challengeCompleted, setChallengeCompleted] = useState(false); // Track if challenge completed today
+    // Removed: Daily challenge limit - users can complete unlimited workouts per day
     const [showNotifications, setShowNotifications] = useState(false); // For notifications modal
     const [unreadCount, setUnreadCount] = useState(0); // Unread notifications count
     const { addXP, calculateLevel } = useGamification();
@@ -64,7 +64,7 @@ const Dashboard = () => {
 
     const handleChallengeComplete = () => {
         setShowPhotoCapture(false);
-        setChallengeCompleted(true);
+        // Removed: setChallengeCompleted(true) - no daily limit
     };
 
     const handlePhotoCaptureCancel = () => {
@@ -86,14 +86,7 @@ const Dashboard = () => {
                     setShowOnboarding(true);
                 }
 
-                // Check if challenge completed today
-                const lastChallengeDate = doc.data().lastChallengeDate;
-                const today = new Date().toDateString();
-                if (lastChallengeDate === today) {
-                    setChallengeCompleted(true);
-                } else {
-                    setChallengeCompleted(false);
-                }
+                // Removed: Daily challenge limit check - users can do unlimited workouts
             }
             setLoading(false);
         });
@@ -375,20 +368,16 @@ const Dashboard = () => {
                         </span>
                     </div>
 
-                    {challengeCompleted ? (
-                        <div className="relative z-10 bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full font-black text-sm text-center">
-                            ✅ Concluído! Volte amanhã 🔥
-                        </div>
-                    ) : (
-                        <button
-                            onClick={handleOpenPhotoCapture}
-                            className="relative z-10 bg-white text-purple-600 px-6 py-3 rounded-full font-black text-sm hover:scale-105 active:scale-95 transition-transform shadow-lg flex items-center justify-center gap-2"
-                            aria-label="Comprovar com foto"
-                        >
-                            <Camera size={18} />
-                            Comprovar com Foto
-                        </button>
-                    )}
+
+                    {/* Always show button - no daily limit */}
+                    <button
+                        onClick={handleOpenPhotoCapture}
+                        className="relative z-10 bg-white text-purple-600 px-6 py-3 rounded-full font-black text-sm hover:scale-105 active:scale-95 transition-transform shadow-lg flex items-center justify-center gap-2"
+                        aria-label="Comprovar com foto"
+                    >
+                        <Camera size={18} />
+                        Comprovar com Foto
+                    </button>
                 </div>
 
                 {/* Dica do Treinador (Tip Card) */}
