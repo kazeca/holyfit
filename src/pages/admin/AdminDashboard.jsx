@@ -77,11 +77,11 @@ const AdminDashboard = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                         <Users className="text-cyan-500" size={24} />
-                        <span className="text-4xl font-black text-white">{stats.totalUsers}</span>
+                        <span className="text-3xl sm:text-4xl font-black text-white">{stats.totalUsers}</span>
                     </div>
                     <p className="text-slate-400 text-sm">Total de Usuários</p>
                 </div>
@@ -89,7 +89,7 @@ const AdminDashboard = () => {
                 <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                         <Activity className="text-green-500" size={24} />
-                        <span className="text-4xl font-black text-white">{stats.activeToday}</span>
+                        <span className="text-3xl sm:text-4xl font-black text-white">{stats.activeToday}</span>
                     </div>
                     <p className="text-slate-400 text-sm">Ativos Hoje</p>
                 </div>
@@ -97,7 +97,7 @@ const AdminDashboard = () => {
                 <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                         <Trophy className="text-orange-500" size={24} />
-                        <span className="text-4xl font-black text-white">{stats.totalWorkouts}</span>
+                        <span className="text-3xl sm:text-4xl font-black text-white">{stats.totalWorkouts}</span>
                     </div>
                     <p className="text-slate-400 text-sm">Total de Treinos</p>
                 </div>
@@ -105,7 +105,7 @@ const AdminDashboard = () => {
                 <div className="bg-slate-800 border border-slate-700/50 rounded-2xl p-6">
                     <div className="flex items-center gap-3 mb-2">
                         <Zap className="text-yellow-500" size={24} />
-                        <span className="text-4xl font-black text-white">{stats.totalXP.toLocaleString()}</span>
+                        <span className="text-2xl sm:text-3xl font-black text-white">{stats.totalXP.toLocaleString()}</span>
                     </div>
                     <p className="text-slate-400 text-sm">Total de XP</p>
                 </div>

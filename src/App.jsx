@@ -19,6 +19,9 @@ import BadgesPage from './pages/BadgesPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminSeasons from './pages/admin/AdminSeasons';
+import AdminBadges from './pages/admin/AdminBadges';
+import AdminNotifications from './pages/admin/AdminNotifications';
+import AdminLayout from './components/admin/AdminLayout';
 
 function App() {
   return (
@@ -100,6 +103,15 @@ function App() {
               <BottomNav />
             </>
           } />
+        </Route>
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="seasons" element={<AdminSeasons />} />
+          <Route path="badges" element={<AdminBadges />} />
+          <Route path="notifications" element={<AdminNotifications />} />
         </Route>
       </Routes>
     </Router>
