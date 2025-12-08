@@ -36,23 +36,23 @@ const StreakShieldCard = ({ userData, onUpdate }) => {
     const { shields, isProtected, protectedUntil, canPurchase } = shieldInfo;
 
     return (
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 p-6 rounded-3xl border-2 border-blue-200 dark:border-blue-800">
+        <div className="bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 dark:from-blue-900/20 dark:via-cyan-900/20 dark:to-blue-900/30 p-6 rounded-3xl border-2 border-blue-200 dark:border-blue-700 shadow-lg shadow-blue-200/50 dark:shadow-blue-900/30">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center">
-                        <Shield size={24} className="text-white" />
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                        <Shield size={28} className="text-white" />
                     </div>
                     <div>
-                        <h3 className="font-black text-gray-900 dark:text-white">Escudo de Streak</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Proteja sua sequência</p>
+                        <h3 className="font-black text-lg text-gray-900 dark:text-white">Escudo de Streak</h3>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Proteja sua sequência</p>
                     </div>
                 </div>
 
                 {/* Shield Counter */}
-                <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-full border-2 border-blue-300 dark:border-blue-700">
-                    <span className="font-black text-2xl text-blue-600 dark:text-blue-400">{shields}</span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">🛡️</span>
+                <div className="bg-white dark:bg-gray-800 px-5 py-2.5 rounded-full border-2 border-blue-400 dark:border-blue-600 shadow-md">
+                    <span className="font-black text-2xl bg-gradient-to-r from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400 bg-clip-text text-transparent">{shields}</span>
+                    <span className="text-base ml-1">🛡️</span>
                 </div>
             </div>
 
@@ -94,8 +94,8 @@ const StreakShieldCard = ({ userData, onUpdate }) => {
                 onClick={handlePurchase}
                 disabled={loading || !canPurchase}
                 className={`w-full py-4 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all ${canPurchase
-                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:scale-105 active:scale-95'
-                        : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:scale-105 active:scale-95'
+                    : 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
                     }`}
             >
                 {loading ? (
@@ -115,8 +115,8 @@ const StreakShieldCard = ({ userData, onUpdate }) => {
             {/* Message */}
             {message && (
                 <div className={`mt-3 p-3 rounded-xl text-sm font-medium text-center ${message.includes('sucesso') || message.includes('adquirido')
-                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                    : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                     }`}>
                     {message}
                 </div>
