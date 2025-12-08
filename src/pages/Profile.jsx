@@ -177,7 +177,22 @@ const Profile = () => {
                     <span className="w-1 h-4 bg-green-500 rounded-full"></span>
                     Histórico de Atividades
                 </h3>
-                <ActivityHeatmap data={workouts.map(w => ({ date: new Date(w.createdAt.seconds * 1000), count: 1 }))} />
+                <ActivityHeatmap data={workouts.map(w => {
+                    // Handle both createdAt (Timestamp) and date (Date) fields
+                    let date;
+                    if (w.createdAt?.seconds) {
+                        date = new Date(w.createdAt.seconds * 1000);
+                    } else if (w.createdAt) {
+                        date = new Date(w.createdAt);
+                    } else if (w.date?.seconds) {
+                        date = new Date(w.date.seconds * 1000);
+                    } else if (w.date) {
+                        date = new Date(w.date);
+                    } else {
+                        date = new Date(); // Fallback to today
+                    }
+                    return { date, count: 1 };
+                }).filter(item => item.date)} />
             </div>
 
             {/* Stats Cards */}
