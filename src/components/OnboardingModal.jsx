@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ChevronRight, Target, Activity, Droplets, Check, ArrowRight } from 'lucide-react';
+import { X, ChevronRight, Target, Activity, Droplets, Check, ArrowRight, Bell } from 'lucide-react';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 
@@ -8,6 +8,7 @@ const OnboardingModal = ({ onComplete }) => {
     const [goalType, setGoalType] = useState('health');
     const [workoutGoal, setWorkoutGoal] = useState(3);
     const [hydrationGoal, setHydrationGoal] = useState(2000);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const goals = [
@@ -15,6 +16,22 @@ const OnboardingModal = ({ onComplete }) => {
         { id: 'lose', label: '🔥 Secar', desc: 'Queimar gordura e definir' },
         { id: 'health', label: '🧘 Saúde', desc: 'Bem-estar e qualidade de vida' }
     ];
+
+    const handleRequestNotifications = async () => {
+        try {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                setNotificationsEnabled(permission === 'granted');
+
+                if (permission === 'granted') {
+                    console.log('✅ Notificações ativadas!');
+                    // Aqui você pode registrar o FCM token se necessário
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao pedir permissão de notificações:', error);
+        }
+    };
 
     const handleFinish = async () => {
         if (!auth.currentUser) return;
@@ -51,7 +68,7 @@ const OnboardingModal = ({ onComplete }) => {
                             <h2 className="text-5xl font-black mb-2 bg-gradient-to-r from-white via-purple-200 to-fuchsia-300 bg-clip-text text-transparent">
                                 Bem-vindo!
                             </h2>
-                            <p className="text-sm text-gray-400 opacity-50">Passo {step} de 3</p>
+                            <p className="text-sm text-gray-400 opacity-50">Passo {step} de 4</p>
                         </div>
                     </div>
 
@@ -59,7 +76,7 @@ const OnboardingModal = ({ onComplete }) => {
                     <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-gradient-to-r from-purple-600 to-fuchsia-600 transition-all duration-500 shadow-[0_0_10px_rgba(168,85,247,0.8)]"
-                            style={{ width: `${(step / 3) * 100}%` }}
+                            style={{ width: `${(step / 4) * 100}%` }}
                         />
                     </div>
                 </div>
@@ -81,8 +98,8 @@ const OnboardingModal = ({ onComplete }) => {
                                     key={goal.id}
                                     onClick={() => setGoalType(goal.id)}
                                     className={`w-full p-5 rounded-2xl text-left transition-all duration-300 active:scale-95 ${goalType === goal.id
-                                            ? 'bg-gradient-to-br from-purple-600 to-fuchsia-600 border-2 border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.7)]'
-                                            : 'bg-white/5 border border-white/10 opacity-60 hover:opacity-80 hover:border-purple-500/50'
+                                        ? 'bg-gradient-to-br from-purple-600 to-fuchsia-600 border-2 border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.7)]'
+                                        : 'bg-white/5 border border-white/10 opacity-60 hover:opacity-80 hover:border-purple-500/50'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between">
@@ -120,8 +137,8 @@ const OnboardingModal = ({ onComplete }) => {
                                         key={days}
                                         onClick={() => setWorkoutGoal(days)}
                                         className={`w-12 h-12 rounded-full font-black transition-all duration-300 active:scale-95 ${workoutGoal === days
-                                                ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white scale-110 shadow-[0_0_20px_rgba(249,115,22,0.7)]'
-                                                : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                            ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white scale-110 shadow-[0_0_20px_rgba(249,115,22,0.7)]'
+                                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
                                             }`}
                                     >
                                         {days}
@@ -164,6 +181,66 @@ const OnboardingModal = ({ onComplete }) => {
                     </div>
                 )}
 
+                {/* Step 4: Notifications */}
+                {step === 4 && (
+                    <div className="space-y-6 relative z-10">
+                        <div className="text-center mb-6">
+                            <div className="mx-auto mb-4 w-20 h-20 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.6)] animate-pulse">
+                                <Bell size={40} className="text-white" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-white mb-2">Ative as Notificações</h3>
+                            <p className="text-sm text-gray-400">Receba lembretes e motivação diária!</p>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                                <div className="flex items-start gap-3 mb-3">
+                                    <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-lg">🔔</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-bold text-sm">Lembretes de Treino</p>
+                                        <p className="text-gray-400 text-xs mt-1">Não perca nenhum dia da sua streak</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3 mb-3">
+                                    <div className="w-8 h-8 rounded-full bg-fuchsia-500/20 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-lg">🎯</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-bold text-sm">Desafios Diários</p>
+                                        <p className="text-gray-400 text-xs mt-1">Novos desafios toda manhã</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-lg">🏆</span>
+                                    </div>
+                                    <div>
+                                        <p className="text-white font-bold text-sm">Conquistas Desbloqueadas</p>
+                                        <p className="text-gray-400 text-xs mt-1">Celebre suas vitórias</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleRequestNotifications}
+                                disabled={notificationsEnabled}
+                                className={`w-full py-4 rounded-2xl font-bold transition-all duration-300 ${notificationsEnabled
+                                        ? 'bg-green-600 text-white cursor-default'
+                                        : 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+                                    }`}
+                            >
+                                {notificationsEnabled ? '✅ Notificações Ativadas!' : '🔔 Ativar Notificações'}
+                            </button>
+
+                            <p className="text-center text-xs text-gray-500">
+                                Você pode desativar a qualquer momento nas configurações
+                            </p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Navigation */}
                 <div className="flex gap-3 mt-8 relative z-10">
                     {step > 1 && (
@@ -175,7 +252,7 @@ const OnboardingModal = ({ onComplete }) => {
                         </button>
                     )}
                     <button
-                        onClick={step === 3 ? handleFinish : () => setStep(step + 1)}
+                        onClick={step === 4 ? handleFinish : () => setStep(step + 1)}
                         disabled={loading}
                         className="flex-1 py-4 bg-gradient-to-r from-purple-600 to-fuchsia-600 rounded-2xl font-black text-white hover:scale-105 active:scale-95 transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(168,85,247,0.5)]"
                     >
@@ -183,8 +260,8 @@ const OnboardingModal = ({ onComplete }) => {
                             <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                         ) : (
                             <>
-                                {step === 3 ? 'Começar' : 'Próximo'}
-                                {step !== 3 && <ArrowRight size={20} className="animate-pulse" />}
+                                {step === 4 ? 'Começar' : 'Próximo'}
+                                {step !== 4 && <ArrowRight size={20} className="animate-pulse" />}
                             </>
                         )}
                     </button>
