@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '../firebase';
 import { doc, onSnapshot, updateDoc, increment } from 'firebase/firestore';
-import { Activity, Droplets, Flame, Zap, Plus, X, Settings, HelpCircle, Crown, Lightbulb, Camera, Calculator, TrendingUp, Target } from 'lucide-react';
+import { Activity, Droplets, Flame, Zap, Plus, X, Settings, HelpCircle, Crown, Lightbulb, Camera, Calculator, TrendingUp, Target, Bell } from 'lucide-react';
 import { getRankByLevel } from '../utils/rankUtils';
 import { useGamification } from '../hooks/useGamification';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +10,7 @@ import OnboardingModal from '../components/OnboardingModal';
 import PhotoProofModal from '../components/PhotoProofModal';
 import NutritionCard from '../components/NutritionCard';
 import { DashboardGridSkeleton } from '../components/SkeletonLoaders';
+import NotificationsModal from '../components/NotificationsModal';
 
 const Dashboard = () => {
     const [userData, setUserData] = useState(null);
@@ -21,6 +22,8 @@ const Dashboard = () => {
     const [showOnboarding, setShowOnboarding] = useState(false); // For first-time users
     const [showPhotoCapture, setShowPhotoCapture] = useState(false); // For challenge photo capture
     const [challengeCompleted, setChallengeCompleted] = useState(false); // Track if challenge completed today
+    const [showNotifications, setShowNotifications] = useState(false); // For notifications modal
+    const [unreadCount, setUnreadCount] = useState(0); // Unread notifications count
     const { addXP, calculateLevel } = useGamification();
     const navigate = useNavigate();
 
@@ -96,6 +99,33 @@ const Dashboard = () => {
         });
 
         return () => unsubscribe();
+    }, []);
+
+    // Fetch unread notifications count
+    useEffect(() => {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        const fetchUnreadCount = async () => {
+            try {
+                const { collection, query, where, getDocs } = await import('firebase/firestore');
+                const q = query(
+                    collection(db, 'notifications'),
+                    where('userId', '==', user.uid),
+                    where('read', '==', false)
+                );
+                const snapshot = await getDocs(q);
+                setUnreadCount(snapshot.size);
+            } catch (error) {
+                console.error('Error fetching unread count:', error);
+            }
+        };
+
+        fetchUnreadCount();
+
+        // Refresh every 30 seconds
+        const interval = setInterval(fetchUnreadCount, 30000);
+        return () => clearInterval(interval);
     }, []);
 
     // Request notification permission on first load
@@ -207,6 +237,17 @@ const Dashboard = () => {
                                 className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-orange-500/30 hover:scale-110 transition-transform"
                             >
                                 <Crown size={20} fill="currentColor" />
+                            </button>
+                            <button
+                                onClick={() => setShowNotifications(true)}
+                                className="relative w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
+                            >
+                                <Bell size={20} />
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold animate-pulse">
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
                             </button>
                             <button
                                 onClick={() => setShowInfoModal(true)}
@@ -586,6 +627,30 @@ const Dashboard = () => {
                     onCancel={handlePhotoCaptureCancel}
                 />
             )}
+
+            {/* Notifications Modal */}
+            <NotificationsModal
+                isOpen={showNotifications}
+                onClose={() => {
+                    setShowNotifications(false);
+                    // Refresh unread count when modal closes
+                    const fetchUnreadCount = async () => {
+                        try {
+                            const { collection, query, where, getDocs } = await import('firebase/firestore');
+                            const q = query(
+                                collection(db, 'notifications'),
+                                where('userId', '==', auth.currentUser.uid),
+                                where('read', '==', false)
+                            );
+                            const snapshot = await getDocs(q);
+                            setUnreadCount(snapshot.size);
+                        } catch (error) {
+                            console.error('Error fetching unread count:', error);
+                        }
+                    };
+                    fetchUnreadCount();
+                }}
+            />
         </div>
     );
 };

@@ -2,6 +2,7 @@ import { db, storage, auth } from '../firebase';
 import { collection, addDoc, updateDoc, doc, serverTimestamp, increment } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
+import { notifyWorkoutComplete } from './inAppNotifications';
 
 /**
  * Compress image before upload
@@ -274,6 +275,20 @@ export const completeWorkoutWithPhoto = async (photoFile, workoutData, photoHash
             description: `Completou treino: ${completionData.workoutName}`
         });
         console.log('✅ [WORKOUT] Feed post created');
+
+        // 5. Create notification
+        console.log('🔵 [WORKOUT] Step 5: Creating notification...');
+        try {
+            await notifyWorkoutComplete(user.uid, {
+                workoutName: completionData.workoutName,
+                xp: completionData.xpAwarded,
+                calories: completionData.calories
+            });
+            console.log('✅ [WORKOUT] Notification created');
+        } catch (error) {
+            console.error('❌ [WORKOUT] Error creating notification:', error);
+            // Don't fail the whole operation if notification fails
+        }
 
         console.log('✅ [WORKOUT] COMPLETE! Returning success...');
         return { success: true, photoURL };
