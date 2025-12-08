@@ -212,3 +212,53 @@ export const completeChallengeWithPhoto = async (photoFile, challengeData, photo
     }
 };
 
+/**
+ * Complete workout with photo proof
+ * Similar to challenge but for workouts
+ */
+export const completeWorkoutWithPhoto = async (photoFile, workoutData, photoHash) => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Usuário não autenticado');
+
+    try {
+        // 1. Upload photo
+        const photoURL = await uploadProofPhoto(photoFile, user.uid, 'workouts');
+
+        // 2. Save workout completion
+        const completionData = {
+            userId: user.uid,
+            userName: user.displayName || 'Usuário',
+            userAvatar: user.photoURL || `https://ui-avatars.com/api/?name=${user.displayName || 'User'}`,
+            workoutName: workoutData.workoutName || 'Treino',
+            photoURL,
+            photoHash,
+            xpAwarded: workoutData.xp || 100,
+            createdAt: serverTimestamp()
+        };
+
+        // Save to workouts collection
+        await addDoc(collection(db, 'workouts'), completionData);
+
+        // 3. Update user stats
+        const userRef = doc(db, 'users', user.uid);
+        await updateDoc(userRef, {
+            totalPoints: increment(completionData.xpAwarded),
+            seasonPoints: increment(completionData.xpAwarded),
+            workoutsCompleted: increment(1),
+            lastWorkoutDate: serverTimestamp()
+        });
+
+        // 4. Create feed post
+        await createFeedPost('Treino Realizado', {
+            ...completionData,
+            userLevel: workoutData.userLevel || 1,
+            description: `Completou treino: ${completionData.workoutName}`
+        });
+
+        return { success: true, photoURL };
+    } catch (error) {
+        console.error('Error completing workout:', error);
+        throw error;
+    }
+};
+
