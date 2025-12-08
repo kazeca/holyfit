@@ -2,12 +2,41 @@ import React, { useState } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider, db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { Trophy, Zap } from 'lucide-react';
 
 const Login = () => {
     const navigate = useNavigate();
     const [error, setError] = useState('');
+
+    // Check and reset daily calories if it's a new day
+    const checkAndResetDailyCalories = async (userId) => {
+        try {
+            const userRef = doc(db, 'users', userId);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) return;
+
+            const userData = userSnap.data();
+            const today = new Date().toISOString().split('T')[0]; // "2025-12-08"
+            const lastReset = userData.lastCalorieReset || '2000-01-01';
+
+            // If it's a new day, reset calories
+            if (lastReset !== today) {
+                console.log('🔄 Novo dia detectado! Resetando calorias...');
+                console.log(`Último reset: ${lastReset}, Hoje: ${today}`);
+                await updateDoc(userRef, {
+                    caloriesBurnedToday: 0,
+                    lastCalorieReset: today
+                });
+                console.log('✅ Calorias resetadas para 0!');
+            } else {
+                console.log('✅ Calorias já resetadas hoje');
+            }
+        } catch (error) {
+            console.error('❌ Erro ao resetar calorias:', error);
+        }
+    };
 
     const handleGoogleLogin = async () => {
         try {
@@ -24,6 +53,7 @@ const Login = () => {
 
             if (!userSnap.exists()) {
                 console.log('🆕 Criando novo usuário no Firestore...');
+                const today = new Date().toISOString().split('T')[0];
                 await setDoc(userRef, {
                     uid: user.uid,
                     displayName: user.displayName,
@@ -36,6 +66,7 @@ const Login = () => {
                     longestStreak: 0,
                     workoutsCompleted: 0,
                     caloriesBurnedToday: 0,
+                    lastCalorieReset: today, // Initialize with today
                     lastCheckinDate: null,
                     createdAt: new Date().toISOString(),
                     badges: [],
@@ -45,6 +76,9 @@ const Login = () => {
             } else {
                 console.log('✅ Usuário já existe, fazendo login...');
             }
+
+            // Check and reset daily calories if needed
+            await checkAndResetDailyCalories(user.uid);
 
             console.log('🚀 Redirecionando para dashboard...');
             navigate('/');
