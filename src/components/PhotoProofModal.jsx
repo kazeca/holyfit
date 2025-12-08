@@ -95,11 +95,18 @@ const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete
         setLoading(true);
         setError(null);
 
+        // Safety timeout - if upload takes more than 30s, show error
+        const timeoutId = setTimeout(() => {
+            setLoading(false);
+            setError('Upload demorou muito. Tente novamente com uma foto menor.');
+        }, 30000);
+
         try {
             // Validate photo
             const validation = await validateChallengePhoto(selectedFile, auth.currentUser.uid);
 
             if (!validation.valid) {
+                clearTimeout(timeoutId);
                 setError(validation.error);
                 setLoading(false);
                 return;
@@ -125,8 +132,11 @@ const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete
                 }, validation.photoHash);
             }
 
+            clearTimeout(timeoutId);
+
             // Success!
             setSuccess(true);
+            setLoading(false);
             triggerSuccessConfetti();
 
             // Close after 3 seconds
@@ -135,9 +145,9 @@ const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete
             }, 3000);
 
         } catch (err) {
+            clearTimeout(timeoutId);
             console.error(`Error completing ${actionType}:`, err);
             setError(err.message || `Erro ao completar ${actionType === 'workout' ? 'treino' : 'desafio'}. Tente novamente.`);
-        } finally {
             setLoading(false);
         }
     };
