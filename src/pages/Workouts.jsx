@@ -31,6 +31,8 @@ const Workouts = () => {
         if (!auth.currentUser) return;
         setLoadingWorkouts(true);
         try {
+            console.log('🔍 [WORKOUTS] Fetching workouts for date:', date.toDateString());
+
             // Fetch all user workouts and filter by date client-side
             const q = query(
                 collection(db, 'workouts'),
@@ -38,13 +40,31 @@ const Workouts = () => {
             );
 
             const snapshot = await getDocs(q);
-            const workouts = snapshot.docs
-                .map(doc => ({ id: doc.id, ...doc.data() }))
+            console.log('📊 [WORKOUTS] Total workouts found:', snapshot.size);
+
+            const allWorkouts = snapshot.docs.map(doc => {
+                const data = { id: doc.id, ...doc.data() };
+                console.log('📝 [WORKOUT]', {
+                    id: doc.id,
+                    hasCreatedAt: !!data.createdAt,
+                    hasDate: !!data.date,
+                    createdAt: data.createdAt?.toDate?.(),
+                    date: data.date
+                });
+                return data;
+            });
+
+            const workouts = allWorkouts
                 .filter(w => {
                     // Handle both 'createdAt' (Timestamp) and 'date' (String) fields
                     const wDate = w.createdAt?.toDate?.() || (w.date ? new Date(w.date) : null);
-                    if (!wDate) return false;
-                    return wDate >= startOfDay(date) && wDate <= endOfDay(date);
+                    if (!wDate) {
+                        console.log('⚠️ [WORKOUT] No valid date:', w.id);
+                        return false;
+                    }
+                    const matches = wDate >= startOfDay(date) && wDate <= endOfDay(date);
+                    console.log('🔎 [WORKOUT]', w.id, 'Date:', wDate.toDateString(), 'Matches:', matches);
+                    return matches;
                 })
                 .sort((a, b) => {
                     const dateA = a.createdAt?.toDate?.() || new Date(a.date);
@@ -52,9 +72,10 @@ const Workouts = () => {
                     return dateB - dateA; // Sort desc
                 });
 
+            console.log('✅ [WORKOUTS] Filtered workouts for today:', workouts.length);
             setDailyWorkouts(workouts);
         } catch (error) {
-            console.error("Error fetching workouts:", error);
+            console.error("❌ [WORKOUTS] Error fetching workouts:", error);
         } finally {
             setLoadingWorkouts(false);
         }
