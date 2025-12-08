@@ -260,22 +260,32 @@ const Profile = () => {
                     <p className="text-xs mt-2">Faça seu primeiro check-in!</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-4">
                     {workouts.map((workout) => (
                         <div
                             key={workout.id}
                             onClick={() => setSelectedWorkout(workout)}
-                            className="aspect-square relative group overflow-hidden rounded-lg bg-gray-800 cursor-pointer"
+                            className="relative group overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900 to-pink-900 cursor-pointer shadow-lg shadow-purple-900/30 hover:shadow-xl hover:shadow-purple-900/50 transition-all hover:scale-105 active:scale-95"
                         >
                             <img
                                 src={workout.imageUrl}
                                 alt="Workout"
-                                className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                                className="w-full aspect-square object-cover transition-transform group-hover:scale-110 opacity-90"
                             />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="text-white text-xs font-bold">
-                                    {workout.createdAt?.seconds ? format(new Date(workout.createdAt.seconds * 1000), "dd/MM", { locale: ptBR }) : ''}
-                                </span>
+                            <div className="absolute inset-0 bg-gradient-to-t from-purple-900/90 via-purple-900/40 to-transparent"></div>
+                            <div className="absolute bottom-0 left-0 right-0 p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-purple-300 text-xs font-bold uppercase tracking-wider">
+                                        Treino Realizado
+                                    </span>
+                                    <div className="w-2 h-2 rounded-full bg-green-400 shadow-lg shadow-green-400/50"></div>
+                                </div>
+                                <p className="text-white font-black text-sm">
+                                    {workout.createdAt?.seconds ? format(new Date(workout.createdAt.seconds * 1000), "dd/MM/yyyy", { locale: ptBR }) : ''}
+                                </p>
+                                <p className="text-purple-200 text-xs mt-1">
+                                    {workout.createdAt?.seconds ? format(new Date(workout.createdAt.seconds * 1000), "HH:mm", { locale: ptBR }) : ''}
+                                </p>
                             </div>
                         </div>
                     ))}
