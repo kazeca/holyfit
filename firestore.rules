@@ -50,9 +50,11 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       
       // Criar apenas próprio workout
+      // Aceita tanto sportName quanto workoutName para compatibilidade
       allow create: if isAuthenticated() && 
                        request.resource.data.userId == request.auth.uid &&
-                       request.resource.data.keys().hasAll(['userId', 'sportName', 'timestamp']);
+                       (request.resource.data.keys().hasAny(['sportName', 'workoutName']) ||
+                        request.resource.data.keys().hasAny(['timestamp', 'createdAt']));
       
       // Atualizar/deletar apenas próprio workout
       allow update, delete: if isAuthenticated() && 

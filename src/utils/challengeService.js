@@ -246,6 +246,8 @@ export const completeWorkoutWithPhoto = async (photoFile, workoutData, photoHash
             photoURL,
             photoHash,
             xpAwarded: workoutData.xp || 100,
+            calories: workoutData.calories || 300, // Add calories field
+            date: new Date(), // Add date field for compatibility
             createdAt: serverTimestamp()
         };
 
@@ -259,6 +261,7 @@ export const completeWorkoutWithPhoto = async (photoFile, workoutData, photoHash
             totalPoints: increment(completionData.xpAwarded),
             seasonPoints: increment(completionData.xpAwarded),
             workoutsCompleted: increment(1),
+            caloriesBurnedToday: increment(completionData.calories), // Add calories tracking
             lastWorkoutDate: serverTimestamp()
         });
         console.log('✅ [WORKOUT] User stats updated');
