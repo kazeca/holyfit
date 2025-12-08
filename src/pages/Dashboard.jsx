@@ -75,14 +75,30 @@ const Dashboard = () => {
         const user = auth.currentUser;
         if (!user) return;
 
-        const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (doc) => {
-            if (doc.exists()) {
-                setUserData(doc.data());
-                if (doc.data().hydrationGoal) setHydrationGoal(doc.data().hydrationGoal);
-                if (doc.data().workoutGoal) setWorkoutGoal(doc.data().workoutGoal);
+        const unsubscribe = onSnapshot(doc(db, 'users', user.uid), async (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+
+                // Check and reset daily calories if needed
+                const today = new Date().toISOString().split('T')[0];
+                const lastReset = data.lastCalorieReset || '';
+
+                if (lastReset !== today) {
+                    console.log('🔄 [DASHBOARD] Resetting calories for new day');
+                    const userRef = doc(db, 'users', user.uid);
+                    await updateDoc(userRef, {
+                        caloriesBurnedToday: 0,
+                        lastCalorieReset: today
+                    });
+                    console.log('✅ [DASHBOARD] Calories reset to 0');
+                }
+
+                setUserData(data);
+                if (data.hydrationGoal) setHydrationGoal(data.hydrationGoal);
+                if (data.workoutGoal) setWorkoutGoal(data.workoutGoal);
 
                 // Check if onboarding needed
-                if (!doc.data().onboardingCompleted) {
+                if (!data.onboardingCompleted) {
                     setShowOnboarding(true);
                 }
 
