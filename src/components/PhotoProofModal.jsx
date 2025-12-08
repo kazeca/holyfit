@@ -89,27 +89,10 @@ const PhotoProofModal = ({ actionType = 'challenge', data, userLevel, onComplete
         }
     };
 
-    const handleOpenCamera = async () => {
-        try {
-            // Request camera permission explicitly
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                // Stop stream immediately - we just needed permission
-                stream.getTracks().forEach(track => track.stop());
-
-                // Permission granted, open file input
-                fileInputRef.current?.click();
-            } else {
-                // Fallback for browsers without getUserMedia
-                fileInputRef.current?.click();
-            }
-        } catch (err) {
-            console.error('Camera permission error:', err);
-            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                setError('Permissão de câmera negada. Por favor, ative a câmera nas configurações do navegador e tente novamente.');
-            } else {
-                setError('Erro ao acessar câmera. Verifique se você tem uma câmera conectada.');
-            }
+    const handleOpenCamera = () => {
+        // Directly trigger file input - browser will handle camera permission
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
         }
     };
 
