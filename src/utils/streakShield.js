@@ -18,17 +18,20 @@ export const purchaseStreakShield = async (userId, cost = 500) => {
         const userSnap = await getDoc(userRef);
 
         if (!userSnap.exists()) {
+            console.error('User not found:', userId);
             return { success: false, message: 'Usuário não encontrado' };
         }
 
         const userData = userSnap.data();
         const currentPoints = userData.totalPoints || 0;
 
+        console.log('Purchase attempt:', { userId, currentPoints, cost, userData });
+
         // Check if user has enough points
         if (currentPoints < cost) {
             return {
                 success: false,
-                message: `Pontos insuficientes. Você precisa de ${cost} pontos.`
+                message: `Pontos insuficientes. Você tem ${currentPoints} pontos e precisa de ${cost}.`
             };
         }
 
@@ -38,6 +41,8 @@ export const purchaseStreakShield = async (userId, cost = 500) => {
             streakShields: increment(1)
         });
 
+        console.log('Shield purchased successfully');
+
         return {
             success: true,
             message: '🛡️ Escudo de Streak adquirido com sucesso!'
@@ -46,7 +51,7 @@ export const purchaseStreakShield = async (userId, cost = 500) => {
         console.error('Error purchasing streak shield:', error);
         return {
             success: false,
-            message: 'Erro ao comprar escudo'
+            message: `Erro ao comprar escudo: ${error.message}`
         };
     }
 };

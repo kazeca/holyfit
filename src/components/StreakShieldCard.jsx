@@ -69,9 +69,22 @@ const StreakShieldCard = ({ userData, onUpdate }) => {
             )}
 
             {/* Description */}
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                Use um escudo para proteger sua streak por 24 horas. Se você esquecer de treinar, o escudo será consumido automaticamente!
-            </p>
+            <div className="mb-4">
+                <p className="text-sm text-gray-600 dark:text-gray-300 font-bold mb-2">
+                    💡 O que faz?
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                    Protege sua sequência de treinos! Se você esquecer de treinar 1 dia, o escudo salva sua streak automaticamente.
+                </p>
+                <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-xl p-3">
+                    <p className="text-xs text-purple-700 dark:text-purple-300 font-bold mb-1">
+                        ✨ Exemplo:
+                    </p>
+                    <p className="text-xs text-purple-600 dark:text-purple-400">
+                        Treinou 5 dias seguidos → Esqueceu 1 dia → Escudo ativo → Streak continua em 5! 🎉
+                    </p>
+                </div>
+            </div>
 
             {/* Benefits */}
             <div className="space-y-2 mb-4">
