@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db, auth } from '../firebase';
-import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from 'firebase/firestore';
 import { Trophy, Crown, Medal } from 'lucide-react';
 import { LeaderboardItemSkeleton } from '../components/SkeletonLoaders';
 
@@ -63,14 +63,22 @@ const Leaderboard = () => {
                 const feedPromises = querySnapshot.docs.map(async (workoutDoc) => {
                     const workout = { id: workoutDoc.id, ...workoutDoc.data() };
                     try {
-                        const userDoc = await getDocs(query(collection(db, 'users'), limit(1)));
-                        const userData = userDoc.docs.find(doc => doc.id === workout.userId);
+                        // Fetch specific user document by ID
+                        const userDocRef = doc(db, 'users', workout.userId);
+                        const userSnap = await getDoc(userDocRef);
+
+                        if (!userSnap.exists()) {
+                            return null; // Skip if user not found
+                        }
+
+                        const userData = userSnap.data();
+
                         return {
                             id: workout.id,
                             userId: workout.userId,
-                            userName: userData?.data()?.displayName || 'Atleta',
-                            userLevel: userData?.data()?.level || 1,
-                            userPhoto: userData?.data()?.photoURL,
+                            userName: userData.displayName || userData.email?.split('@')[0] || 'Atleta',
+                            userLevel: userData.level || 1,
+                            userPhoto: userData.photoURL,
                             sportName: workout.sportName,
                             calories: workout.calories,
                             duration: workout.duration,
@@ -78,7 +86,8 @@ const Leaderboard = () => {
                             timestamp: workout.timestamp,
                             date: workout.date
                         };
-                    } catch {
+                    } catch (error) {
+                        console.error('Error fetching user for workout:', error);
                         return null;
                     }
                 });
