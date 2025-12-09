@@ -3,6 +3,7 @@ import { collection, addDoc, updateDoc, doc, serverTimestamp, increment } from '
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
 import { notifyWorkoutComplete } from './inAppNotifications';
+import { checkBadges } from './badgeChecker';
 
 /**
  * Compress image before upload
@@ -276,7 +277,22 @@ export const completeWorkoutWithPhoto = async (photoFile, workoutData, photoHash
         });
         console.log('✅ [WORKOUT] Feed post created');
 
-        // 5. Create notification
+        // 5. Check and unlock badges
+        console.log('🔵 [WORKOUT] Step 5: Checking for badge unlocks...');
+        try {
+            const newBadges = await checkBadges(user.uid, 'WORKOUT_COMPLETED', {
+                workoutName: completionData.workoutName,
+                calories: completionData.calories
+            });
+            if (newBadges.length > 0) {
+                console.log('🎉 [WORKOUT] Badges unlocked:', newBadges);
+            }
+        } catch (badgeError) {
+            console.error('⚠️ [WORKOUT] Error checking badges (non-critical):', badgeError);
+            // Don't throw - badge checking is optional
+        }
+
+        // 6. Create notification
         console.log('🔵 [WORKOUT] Step 5: Creating notification...');
         try {
             await notifyWorkoutComplete(user.uid, {
