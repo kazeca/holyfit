@@ -88,20 +88,29 @@ export const checkPhotoCooldown = async (userId) => {
 };
 
 /**
- * Check if photo hash already exists for this user
- * Returns true if duplicate found, false if unique
+ * Check if photo hash already exists for this user TODAY
+ * Returns true if duplicate found today, false if unique
  */
 export const checkPhotoReuse = async (userId, photoHash) => {
     try {
+        // Only check for duplicates TODAY (not all time)
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const todayEnd = new Date();
+        todayEnd.setHours(23, 59, 59, 999);
+
         const q = query(
             collection(db, 'challenge_completions'),
             where('userId', '==', userId),
             where('photoHash', '==', photoHash),
+            where('createdAt', '>=', todayStart),
+            where('createdAt', '<=', todayEnd),
             limit(1)
         );
 
         const snapshot = await getDocs(q);
-        return !snapshot.empty; // true if duplicate found
+        return !snapshot.empty; // true if duplicate found TODAY
     } catch (error) {
         console.error('Error checking photo reuse:', error);
         return false; // On error, assume unique (fail open)
@@ -123,11 +132,8 @@ export const validateChallengePhoto = async (file, userId) => {
         return { valid: false, error: 'Arquivo deve ser uma imagem.' };
     }
 
-    // Check cooldown
-    const canComplete = await checkPhotoCooldown(userId);
-    if (!canComplete) {
-        return { valid: false, error: 'Você já completou o desafio hoje! Volte amanhã. 🔥' };
-    }
+    // Removed: Daily cooldown check - users can complete unlimited workouts per day
+    // This was blocking multiple workouts, which is now allowed
 
     // Generate hash
     const photoHash = await generatePhotoHash(file);
